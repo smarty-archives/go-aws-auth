@@ -1,9 +1,7 @@
 package awsauth
 
 import (
-	"fmt"
 	. "github.com/smartystreets/goconvey/convey"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -18,26 +16,23 @@ func TestIntegration(t *testing.T) {
 		Convey("A request to S3 should succeed", nil)
 
 		Convey("A request to EC2 should succeed", func() {
-			// TODO -- Uh oh, EC2 only supports Signature Version 2. Hmmm.
-			req := newRequest("https://ec2.amazonaws.com", url.Values{
+			req := newRequest("GET", "https://ec2.amazonaws.com", url.Values{
 				"Action": []string{"DescribeInstances"},
 			})
-			resp := signAndDo(req)
+			resp := sign2AndDo(req)
 
 			if !envCredentialsSet() {
 				SkipSo(resp.StatusCode, ShouldEqual, http.StatusOK)
 			} else {
 				So(resp.StatusCode, ShouldEqual, http.StatusOK)
-				b, _ := ioutil.ReadAll(resp.Body)
-				fmt.Println(string(b))
 			}
 		})
 
 		Convey("A request to SQS should succeed", func() {
-			req := newRequest("https://sqs.us-west-2.amazonaws.com", url.Values{
+			req := newRequest("POST", "https://sqs.us-west-2.amazonaws.com", url.Values{
 				"Action": []string{"ListQueues"},
 			})
-			resp := signAndDo(req)
+			resp := sign4AndDo(req)
 
 			if !envCredentialsSet() {
 				SkipSo(resp.StatusCode, ShouldEqual, http.StatusOK)
@@ -53,12 +48,18 @@ func envCredentialsSet() bool {
 	return os.Getenv(envAccessKeyID) != "" && os.Getenv(envSecretAccessKey) != ""
 }
 
-func newRequest(url string, v url.Values) *http.Request {
-	req, _ := http.NewRequest("POST", url, strings.NewReader(v.Encode()))
+func newRequest(method string, url string, v url.Values) *http.Request {
+	req, _ := http.NewRequest(method, url, strings.NewReader(v.Encode()))
 	return req
 }
 
-func signAndDo(req *http.Request) *http.Response {
+func sign2AndDo(req *http.Request) *http.Response {
+	Sign2(req)
+	resp, _ := client.Do(req)
+	return resp
+}
+
+func sign4AndDo(req *http.Request) *http.Response {
 	Sign4(req)
 	resp, _ := client.Do(req)
 	return resp

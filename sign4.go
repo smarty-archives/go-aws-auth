@@ -27,7 +27,7 @@ func hashedCanonicalRequest(req *http.Request, meta *metadata) string {
 	return hashSHA256(canonicalRequest)
 }
 
-func stringToSign(req *http.Request, hashedCanonReq string, meta *metadata) string {
+func stringToSignV4(req *http.Request, hashedCanonReq string, meta *metadata) string {
 	// TASK 2. http://docs.aws.amazon.com/general/latest/gr/sigv4-create-string-to-sign.html
 
 	requestTs := req.Header.Get("X-Amz-Date")
@@ -49,7 +49,7 @@ func signatureVersion4(signingKey []byte, stringToSign string) string {
 func prepareRequest(req *http.Request) *http.Request {
 	necessaryDefaults := map[string]string{
 		"Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
-		"X-Amz-Date":   timestamp(),
+		"X-Amz-Date":   timestampV4(),
 	}
 
 	for header, value := range necessaryDefaults {
@@ -116,8 +116,8 @@ func hashSHA256(content string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-func timestamp() string {
-	t := time.Now().UTC().Format(time.RFC3339)
+func timestampV4() string {
+	t := now().Format(time.RFC3339)
 	t = strings.Replace(t, ":", "", -1)
 	t = strings.Replace(t, "-", "", -1)
 	return t
@@ -135,4 +135,8 @@ func hmacSHA256(key []byte, content string) []byte {
 	mac := hmac.New(sha256.New, key)
 	mac.Write([]byte(content))
 	return mac.Sum(nil)
+}
+
+var now = func() time.Time {
+	return time.Now().UTC()
 }

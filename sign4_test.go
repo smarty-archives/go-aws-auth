@@ -1,7 +1,6 @@
 package awsauth
 
 import (
-	//"fmt"
 	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/url"
@@ -14,7 +13,7 @@ func TestRequestPreparer(t *testing.T) {
 		req := plainRequest(false)
 
 		expectedUnsigned := unsignedRequest(true)
-		expectedUnsigned.Header.Set("X-Amz-Date", timestamp())
+		expectedUnsigned.Header.Set("X-Amz-Date", timestampV4())
 
 		Convey("The necessary, default headers should be appended", func() {
 			prepareRequest(req)
@@ -66,14 +65,14 @@ func TestSigningTasks(t *testing.T) {
 
 		Convey("(Task 2) The string to sign should be built correctly", func() {
 			hashedCanonReq := hashedCanonicalRequest(req, meta)
-			stringToSign := stringToSign(req, hashedCanonReq, meta)
+			stringToSign := stringToSignV4(req, hashedCanonReq, meta)
 
 			So(stringToSign, ShouldEqual, expecting["StringToSign"])
 		})
 
 		Convey("(Task 3) The version 4 signed signature should be correct", func() {
 			hashedCanonReq := hashedCanonicalRequest(req, meta)
-			stringToSign := stringToSign(req, hashedCanonReq, meta)
+			stringToSign := stringToSignV4(req, hashedCanonReq, meta)
 			signature := signatureVersion4(testSigningKey(), stringToSign)
 
 			So(signature, ShouldEqual, expecting["SignatureV4"])
@@ -81,7 +80,7 @@ func TestSigningTasks(t *testing.T) {
 	})
 }
 
-func TestHelperFunctions(t *testing.T) {
+func TestSignature4Functions(t *testing.T) {
 
 	Convey("The signing key should be properly generated", t, func() {
 		expected := []byte{152, 241, 216, 137, 254, 196, 244, 66, 26, 220, 82, 43, 171, 12, 225, 248, 46, 105, 41, 194, 98, 237, 21, 229, 169, 76, 144, 239, 209, 227, 176, 231}
@@ -132,7 +131,7 @@ func TestHelperFunctions(t *testing.T) {
 	})
 
 	Convey("Timestamps should be in the correct format, in UTC time", t, func() {
-		actual := timestamp()
+		actual := timestampV4()
 
 		So(len(actual), ShouldEqual, 16)
 		So(actual, ShouldNotContainSubstring, ":")
