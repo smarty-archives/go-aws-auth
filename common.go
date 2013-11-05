@@ -2,6 +2,7 @@ package awsauth
 
 import (
 	"crypto/hmac"
+	"crypto/sha1"
 	"crypto/sha256"
 	"fmt"
 	"io/ioutil"
@@ -15,12 +16,25 @@ import (
 func serviceAndRegion(host string) (string, string) {
 	var region, service string
 	parts := strings.Split(host, ".")
+
 	service = parts[0]
+
 	if len(parts) >= 4 {
-		region = parts[1]
+		if parts[1] == "s3" {
+			region = parts[0]
+			service = parts[1]
+		} else {
+			region = parts[1]
+		}
 	} else {
-		region = "us-east-1" // default. http://docs.aws.amazon.com/general/latest/gr/rande.html
+		if strings.HasPrefix(parts[0], "s3-") {
+			service = parts[0][:2]
+			region = parts[0][3:]
+		} else {
+			region = "us-east-1" // default. http://docs.aws.amazon.com/general/latest/gr/rande.html
+		}
 	}
+
 	return service, region
 }
 
@@ -47,6 +61,12 @@ func augmentRequestQuery(req *http.Request, values url.Values) *http.Request {
 
 func hmacSHA256(key []byte, content string) []byte {
 	mac := hmac.New(sha256.New, key)
+	mac.Write([]byte(content))
+	return mac.Sum(nil)
+}
+
+func hmacSHA1(key []byte, content string) []byte {
+	mac := hmac.New(sha1.New, key)
 	mac.Write([]byte(content))
 	return mac.Sum(nil)
 }

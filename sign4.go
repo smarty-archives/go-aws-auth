@@ -76,8 +76,7 @@ func buildAuthHeaderV4(signature string, meta *metadata) string {
 }
 
 func timestampV4() string {
-	t := now().Format(timeFormatV4)
-	return t
+	return now().Format(timeFormatV4)
 }
 
 func tsDateV4(timestamp string) string {
