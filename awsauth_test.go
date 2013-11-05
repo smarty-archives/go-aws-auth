@@ -40,7 +40,36 @@ func TestIntegration(t *testing.T) {
 				So(resp.StatusCode, ShouldEqual, http.StatusOK)
 			}
 		})
+	})
+}
 
+func TestSign(t *testing.T) {
+	Convey("Requests to services using Version 2 should be signed accordingly", t, func() {
+		reqs := []*http.Request{
+			newRequest("GET", "https://ec2.amazonaws.com", url.Values{}),
+			newRequest("GET", "https://elasticache.amazonaws.com/", url.Values{}),
+		}
+		for _, req := range reqs {
+			signedReq := Sign(req)
+			So(signedReq.URL.Query().Get("SignatureVersion"), ShouldEqual, "2")
+		}
+	})
+
+	Convey("Requests to services using Version 4 should be signed accordingly", t, func() {
+		reqs := []*http.Request{
+			newRequest("POST", "https://sqs.amazonaws.com/", url.Values{}),
+			newRequest("GET", "https://iam.amazonaws.com", url.Values{}),
+		}
+		for _, req := range reqs {
+			signedReq := Sign(req)
+			So(signedReq.Header.Get("Authorization"), ShouldContainSubstring, ", Signature=")
+		}
+	})
+
+	SkipConvey("Requests to S3 should be signed accordingly", t, func() {
+		req := newRequest("POST", "https://s3.amazonaws.com", url.Values{})
+		signedReq := Sign(req)
+		So(signedReq.Header.Get("Authorization"), ShouldContainSubstring, "AWS ")
 	})
 }
 

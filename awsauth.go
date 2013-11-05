@@ -12,6 +12,20 @@ type Credentials struct {
 	SecretAccessKey string
 }
 
+func Sign(req *http.Request) *http.Request {
+	service, _ := serviceAndRegion(req.URL.Host)
+	sigVersion := awsSignVersion[service]
+
+	switch sigVersion {
+	case 2:
+		return Sign2(req)
+	case 4:
+		return Sign4(req)
+	}
+
+	return nil
+}
+
 func Sign4(req *http.Request) *http.Request {
 	checkKeys()
 	prepareRequestV4(req)
@@ -81,7 +95,7 @@ var awsSignVersion = map[string]int{
 	"sdb": 2,
 	"sns": 4,
 	"sqs": 4,
-	"s3":  0, // custom... thanks, Amazon...
+	"s3":  -1, // custom... thanks, Amazon...
 	//"swf":                  ???,
 	//"directconnect":        ???,
 	"elasticbeanstalk": 4,
