@@ -33,28 +33,16 @@ func stringToSignV2(req *http.Request) string {
 	str := req.Method + "\n"
 	str += strings.ToLower(req.URL.Host) + "\n"
 	str += req.URL.Path + "\n"
-	str += canonicalQueryString(req)
+	str += canonicalQueryStringV2(req)
 	return str
 }
 
-func signatureVersion2(strToSign string) string {
+func signatureV2(strToSign string) string {
 	hashed := hmacSHA256([]byte(Keys.SecretAccessKey), strToSign)
 	return base64.StdEncoding.EncodeToString(hashed)
 }
 
-func augmentRequestQuery(req *http.Request, values url.Values) *http.Request {
-	for key, arr := range req.URL.Query() {
-		for _, val := range arr {
-			values.Set(key, val)
-		}
-	}
-
-	req.URL.RawQuery = values.Encode()
-
-	return req
-}
-
-func canonicalQueryString(req *http.Request) string {
+func canonicalQueryStringV2(req *http.Request) string {
 	return req.URL.RawQuery
 }
 

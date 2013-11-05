@@ -14,18 +14,18 @@ type Credentials struct {
 
 func Sign4(req *http.Request) *http.Request {
 	checkKeys()
-	prepareRequest(req)
+	prepareRequestV4(req)
 	meta := new(metadata)
 
 	// Task 1
-	hashedCanonReq := hashedCanonicalRequest(req, meta)
+	hashedCanonReq := hashedCanonicalRequestV4(req, meta)
 
 	// Task 2
 	stringToSign := stringToSignV4(req, hashedCanonReq, meta)
 
 	// Task 3
-	signingKey := signingKey(Keys.SecretAccessKey, meta.date, meta.region, meta.service)
-	signature := signatureVersion4(signingKey, stringToSign)
+	signingKey := signingKeyV4(Keys.SecretAccessKey, meta.date, meta.region, meta.service)
+	signature := signatureV4(signingKey, stringToSign)
 
 	req.Header.Set("Authorization", buildAuthHeader(signature, meta))
 
@@ -37,7 +37,7 @@ func Sign2(req *http.Request) *http.Request {
 	prepareRequestV2(req)
 
 	stringToSign := stringToSignV2(req)
-	signature := signatureVersion2(stringToSign)
+	signature := signatureV2(stringToSign)
 
 	values := url.Values{}
 	values.Set("Signature", signature)
