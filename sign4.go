@@ -2,9 +2,7 @@ package awsauth
 
 import (
 	"encoding/hex"
-	"io/ioutil"
 	"net/http"
-	"strings"
 )
 
 func hashedCanonicalRequestV4(req *http.Request, meta *metadata) string {
@@ -68,14 +66,7 @@ func signingKeyV4(secretKey, date, region, service string) []byte {
 	return kSigning
 }
 
-func readAndReplaceBody(req *http.Request) string {
-	rawPayload, _ := ioutil.ReadAll(req.Body)
-	payload := string(rawPayload)
-	req.Body = ioutil.NopCloser(strings.NewReader(payload))
-	return payload
-}
-
-func buildAuthHeader(signature string, meta *metadata) string {
+func buildAuthHeaderV4(signature string, meta *metadata) string {
 	credential := Keys.AccessKeyID + "/" + meta.credentialScope
 
 	return meta.algorithm +

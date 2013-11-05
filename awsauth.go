@@ -21,6 +21,8 @@ func Sign(req *http.Request) *http.Request {
 		return Sign2(req)
 	case 4:
 		return Sign4(req)
+	case -1:
+		return SignS3(req)
 	}
 
 	return nil
@@ -41,7 +43,7 @@ func Sign4(req *http.Request) *http.Request {
 	signingKey := signingKeyV4(Keys.SecretAccessKey, meta.date, meta.region, meta.service)
 	signature := signatureV4(signingKey, stringToSign)
 
-	req.Header.Set("Authorization", buildAuthHeader(signature, meta))
+	req.Header.Set("Authorization", buildAuthHeaderV4(signature, meta))
 
 	return req
 }
@@ -58,6 +60,11 @@ func Sign2(req *http.Request) *http.Request {
 
 	augmentRequestQuery(req, values)
 
+	return req
+}
+
+func SignS3(req *http.Request) *http.Request {
+	// TODO
 	return req
 }
 

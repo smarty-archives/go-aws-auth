@@ -20,7 +20,7 @@ func TestCommonFunctions(t *testing.T) {
 		input := "This is... Sparta!!"
 		actual := hashSHA256(input)
 
-		So(actual, ShouldEqual, expecting["Sha256Hash"])
+		So(actual, ShouldEqual, "5c81a4ef1172e89b1a9d575f4cd82f4ed20ea9137e61aa7f1ab936291d24e79a")
 	})
 
 	Convey("Given a key and contents", t, func() {

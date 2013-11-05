@@ -15,7 +15,7 @@ func TestIntegration(t *testing.T) {
 
 		Convey("A request to S3 should succeed", nil)
 
-		Convey("A request to EC2 should succeed", func() {
+		Convey(`A request to EC2 should succeed <!--<audio src="its-working.mp3" autoplay></audio>-->`, func() {
 			req := newRequest("GET", "https://ec2.amazonaws.com", url.Values{
 				"Action": []string{"DescribeInstances"},
 			})

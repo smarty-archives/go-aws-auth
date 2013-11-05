@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -54,6 +55,13 @@ func hashSHA256(content string) string {
 	h := sha256.New()
 	h.Write([]byte(content))
 	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+func readAndReplaceBody(req *http.Request) string {
+	rawPayload, _ := ioutil.ReadAll(req.Body)
+	payload := string(rawPayload)
+	req.Body = ioutil.NopCloser(strings.NewReader(payload))
+	return payload
 }
 
 func concat(delim string, str ...string) string {
