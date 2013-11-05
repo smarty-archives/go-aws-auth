@@ -78,6 +78,9 @@ func hashSHA256(content string) string {
 }
 
 func readAndReplaceBody(req *http.Request) string {
+	if req.Body == nil {
+		return ""
+	}
 	rawPayload, _ := ioutil.ReadAll(req.Body)
 	payload := string(rawPayload)
 	req.Body = ioutil.NopCloser(strings.NewReader(payload))

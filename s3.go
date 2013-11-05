@@ -78,6 +78,9 @@ func canonicalResourceS3(req *http.Request) string {
 
 func prepareRequestS3(req *http.Request) *http.Request {
 	// TODO: test
+
+	req.Header.Set("Date", timestampS3())
+
 	if req.URL.Path == "" {
 		req.URL.Path += "/"
 	}

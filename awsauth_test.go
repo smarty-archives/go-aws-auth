@@ -11,9 +11,27 @@ import (
 
 func TestIntegration(t *testing.T) {
 	Convey("Given real credentials from environment variables", t, func() {
-		Convey("A request to IAM should succeed", nil)
+		Convey("A request to IAM should succeed", func() {
+			req, _ := http.NewRequest("GET", "https://iam.amazonaws.com/?Action=ListUsers&Version=2010-05-08", nil)
+			resp := sign4AndDo(req)
 
-		Convey("A request to S3 should succeed", nil)
+			if !envCredentialsSet() {
+				SkipSo(resp.StatusCode, ShouldEqual, http.StatusOK)
+			} else {
+				So(resp.StatusCode, ShouldEqual, http.StatusOK)
+			}
+		})
+
+		Convey("A request to S3 should succeed", func() {
+			req, _ := http.NewRequest("GET", "https://s3.amazonaws.com", nil)
+			resp := signS3AndDo(req)
+
+			if !envCredentialsSet() {
+				SkipSo(resp.StatusCode, ShouldEqual, http.StatusOK)
+			} else {
+				So(resp.StatusCode, ShouldEqual, http.StatusOK)
+			}
+		})
 
 		Convey(`A request to EC2 should succeed <!--<audio src="its-working.mp3" autoplay></audio>-->`, func() {
 			req := newRequest("GET", "https://ec2.amazonaws.com", url.Values{
@@ -92,6 +110,12 @@ func sign2AndDo(req *http.Request) *http.Response {
 
 func sign4AndDo(req *http.Request) *http.Response {
 	Sign4(req)
+	resp, _ := client.Do(req)
+	return resp
+}
+
+func signS3AndDo(req *http.Request) *http.Response {
+	SignS3(req)
 	resp, _ := client.Do(req)
 	return resp
 }
