@@ -1,7 +1,7 @@
 package awsauth
 
 import (
-	"fmt"
+	"encoding/base64"
 	"net/http"
 	"sort"
 	"strings"
@@ -9,8 +9,29 @@ import (
 )
 
 func signatureS3(stringToSign string) string {
-	fmt.Println("TODO")
-	return ""
+	hashed := hmacSHA1([]byte(Keys.SecretAccessKey), stringToSign)
+	return base64.StdEncoding.EncodeToString(hashed)
+}
+
+func stringToSignS3(req *http.Request) string {
+
+	str := req.Method + "\n"
+
+	// TODO: Content-MD5 here...
+	str += "\n"
+
+	str += req.Header.Get("Content-Type") + "\n"
+
+	str += timestampS3() + "\n"
+
+	canonicalHeaders := canonicalAmzHeadersS3(req)
+	if canonicalHeaders != "" {
+		str += canonicalHeaders
+	}
+
+	str += canonicalResourceS3(req)
+
+	return str
 }
 
 func canonicalAmzHeadersS3(req *http.Request) string {
@@ -29,7 +50,11 @@ func canonicalAmzHeadersS3(req *http.Request) string {
 		headers[i] = header + ":" + strings.Replace(req.Header.Get(header), "\n", " ", -1)
 	}
 
-	return strings.Join(headers, "\n") + "\n"
+	if len(headers) > 0 {
+		return strings.Join(headers, "\n") + "\n"
+	} else {
+		return ""
+	}
 }
 
 func canonicalResourceS3(req *http.Request) string {

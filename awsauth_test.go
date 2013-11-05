@@ -66,10 +66,12 @@ func TestSign(t *testing.T) {
 		}
 	})
 
-	SkipConvey("Requests to S3 should be signed accordingly", t, func() {
-		req := newRequest("POST", "https://s3.amazonaws.com", url.Values{})
+	Convey("Requests to S3 should be signed accordingly", t, func() {
+		req := newRequest("GET", "https://johnsmith.s3.amazonaws.com", url.Values{})
 		signedReq := Sign(req)
-		So(signedReq.Header.Get("Authorization"), ShouldContainSubstring, "AWS ")
+
+		So(signedReq.Header.Get("Authorization"), ShouldStartWith, "AWS ")
+		So(signedReq.Header.Get("Authorization"), ShouldContainSubstring, ":")
 	})
 }
 

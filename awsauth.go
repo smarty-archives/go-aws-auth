@@ -64,7 +64,15 @@ func Sign2(req *http.Request) *http.Request {
 }
 
 func SignS3(req *http.Request) *http.Request {
-	// TODO
+	checkKeys()
+	prepareRequestS3(req)
+
+	stringToSign := stringToSignS3(req)
+	signature := signatureS3(stringToSign)
+
+	authHeader := "AWS " + Keys.AccessKeyID + ":" + signature
+	req.Header.Set("Authorization", authHeader)
+
 	return req
 }
 

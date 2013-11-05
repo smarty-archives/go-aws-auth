@@ -14,6 +14,7 @@ func TestSignature2(t *testing.T) {
 	Convey("Given bogus credentials", t, func() {
 		Keys = testCredV2
 
+		// Mock time
 		now = func() time.Time {
 			parsed, _ := time.Parse(timeFormatV2, exampleReqTsV2)
 			return parsed
