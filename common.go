@@ -2,8 +2,10 @@ package awsauth
 
 import (
 	"crypto/hmac"
+	"crypto/md5"
 	"crypto/sha1"
 	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -75,6 +77,12 @@ func hashSHA256(content string) string {
 	h := sha256.New()
 	h.Write([]byte(content))
 	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+func hashMD5(content []byte) string {
+	h := md5.New()
+	h.Write(content)
+	return base64.StdEncoding.EncodeToString(h.Sum(nil))
 }
 
 func readAndReplaceBody(req *http.Request) string {

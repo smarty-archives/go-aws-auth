@@ -28,6 +28,13 @@ func TestCommonFunctions(t *testing.T) {
 		So(r5, ShouldEqual, "us-west-1")
 	})
 
+	Convey("MD5 hashes should be properly computed and base-64 encoded", t, func() {
+		input := []byte("Pretend this is a REALLY long byte array...")
+		actual := hashMD5(input)
+
+		So(actual, ShouldEqual, "KbVTY8Vl6VccnzQf1AGOFw==")
+	})
+
 	Convey("SHA-256 hashes should be properly hex-encoded (base 16)", t, func() {
 		input := "This is... Sparta!!"
 		actual := hashSHA256(input)
