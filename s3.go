@@ -14,10 +14,12 @@ func signatureS3(stringToSign string) string {
 }
 
 func stringToSignS3(req *http.Request) string {
-
 	str := req.Method + "\n"
 
-	// TODO: Content-MD5 here...
+	body := readAndReplaceBody(req)
+	if len(body) > 0 {
+		str += hashMD5(body)
+	}
 	str += "\n"
 
 	str += req.Header.Get("Content-Type") + "\n"

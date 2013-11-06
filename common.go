@@ -1,6 +1,7 @@
 package awsauth
 
 import (
+	"bytes"
 	"crypto/hmac"
 	"crypto/md5"
 	"crypto/sha1"
@@ -73,9 +74,9 @@ func hmacSHA1(key []byte, content string) []byte {
 	return mac.Sum(nil)
 }
 
-func hashSHA256(content string) string {
+func hashSHA256(content []byte) string {
 	h := sha256.New()
-	h.Write([]byte(content))
+	h.Write(content)
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
@@ -85,13 +86,12 @@ func hashMD5(content []byte) string {
 	return base64.StdEncoding.EncodeToString(h.Sum(nil))
 }
 
-func readAndReplaceBody(req *http.Request) string {
+func readAndReplaceBody(req *http.Request) []byte {
 	if req.Body == nil {
-		return ""
+		return []byte{}
 	}
-	rawPayload, _ := ioutil.ReadAll(req.Body)
-	payload := string(rawPayload)
-	req.Body = ioutil.NopCloser(strings.NewReader(payload))
+	payload, _ := ioutil.ReadAll(req.Body)
+	req.Body = ioutil.NopCloser(bytes.NewReader(payload))
 	return payload
 }
 

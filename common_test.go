@@ -36,7 +36,7 @@ func TestCommonFunctions(t *testing.T) {
 	})
 
 	Convey("SHA-256 hashes should be properly hex-encoded (base 16)", t, func() {
-		input := "This is... Sparta!!"
+		input := []byte("This is... Sparta!!")
 		actual := hashSHA256(input)
 
 		So(actual, ShouldEqual, "5c81a4ef1172e89b1a9d575f4cd82f4ed20ea9137e61aa7f1ab936291d24e79a")

@@ -17,7 +17,7 @@ func hashedCanonicalRequestV4(req *http.Request, meta *metadata) string {
 	meta.signedHeaders = "content-type;host;x-amz-date"
 
 	canonicalRequest := concat("\n", req.Method, req.URL.Path, req.URL.RawQuery, headersToSign, meta.signedHeaders, hashedPayload)
-	return hashSHA256(canonicalRequest)
+	return hashSHA256([]byte(canonicalRequest))
 }
 
 func stringToSignV4(req *http.Request, hashedCanonReq string, meta *metadata) string {

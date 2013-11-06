@@ -123,13 +123,13 @@ func TestSignature4Helpers(t *testing.T) {
 		req := test_plainRequestV4(false)
 
 		Convey("Its body should be read and replaced without differences", func() {
-			expected := requestValuesV4.Encode()
+			expected := []byte(requestValuesV4.Encode())
 
 			actual1 := readAndReplaceBody(req)
-			So(actual1, ShouldEqual, expected)
+			So(actual1, ShouldResemble, expected)
 
 			actual2 := readAndReplaceBody(req)
-			So(actual2, ShouldEqual, expected)
+			So(actual2, ShouldResemble, expected)
 		})
 	})
 }
