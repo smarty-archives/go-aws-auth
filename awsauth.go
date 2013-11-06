@@ -1,3 +1,5 @@
+// Package awsauth implements AWS request signing using Signed Signature Version 2,
+// Signed Signature Version 4, and the S3 Custom HTTP Authentication Scheme.
 package awsauth
 
 import (
@@ -5,6 +7,8 @@ import (
 	"net/url"
 )
 
+// Keys stores the authentication credentials to be used when signing requests.
+// You can set them manually or leave it to awsauth to use environment variables.
 var Keys *Credentials
 
 type Credentials struct {
@@ -12,6 +16,8 @@ type Credentials struct {
 	SecretAccessKey string
 }
 
+// Sign signs a request bound for AWS. It automatically chooses the best
+// authentication scheme based on the service the request is going to.
 func Sign(req *http.Request) *http.Request {
 	service, _ := serviceAndRegion(req.URL.Host)
 	sigVersion := awsSignVersion[service]
@@ -28,6 +34,7 @@ func Sign(req *http.Request) *http.Request {
 	return nil
 }
 
+// Sign4 signs a request with Signed Signature Version 4.
 func Sign4(req *http.Request) *http.Request {
 	checkKeys()
 	prepareRequestV4(req)
@@ -48,6 +55,8 @@ func Sign4(req *http.Request) *http.Request {
 	return req
 }
 
+// Sign2 signs a request with Signed Signature Version 2.
+// If the service you're accessing supports Version 4, use that instead.
 func Sign2(req *http.Request) *http.Request {
 	checkKeys()
 	prepareRequestV2(req)
@@ -63,6 +72,8 @@ func Sign2(req *http.Request) *http.Request {
 	return req
 }
 
+// SignS3 signs a request bound for Amazon S3 using their custom
+// HTTP authentication scheme.
 func SignS3(req *http.Request) *http.Request {
 	checkKeys()
 	prepareRequestS3(req)
