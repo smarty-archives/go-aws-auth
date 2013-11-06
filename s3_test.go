@@ -20,6 +20,11 @@ func TestSignatureS3(t *testing.T) {
 			return parsed
 		}
 
+		Convey("The request should be prepared with a Date header", func() {
+			prepareRequestS3(req)
+			So(req.Header.Get("Date"), ShouldEqual, exampleReqTsS3)
+		})
+
 		Convey("The CanonicalizedAmzHeaders should be built properly", func() {
 			req2 := test_headerRequestS3()
 			actual := canonicalAmzHeadersS3(req2)

@@ -11,10 +11,8 @@ import (
 
 func TestIntegration(t *testing.T) {
 	Convey("Given real credentials from environment variables", t, func() {
-		Convey("A request to IAM should succeed", func() {
-			req := newRequest("GET", "https://iam.amazonaws.com", url.Values{
-				"Action": []string{"ListUsers"},
-			})
+		Convey("A request to IAM should succeed <small>(assuming Administrator Access policy)</small>", func() {
+			req := newRequest("GET", "https://iam.amazonaws.com/?Action=ListRoles&Version=2010-05-08", url.Values{})
 			resp := sign4AndDo(req)
 
 			if !envCredentialsSet() {
