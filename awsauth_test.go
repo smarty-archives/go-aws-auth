@@ -12,7 +12,9 @@ import (
 func TestIntegration(t *testing.T) {
 	Convey("Given real credentials from environment variables", t, func() {
 		Convey("A request to IAM should succeed", func() {
-			req, _ := http.NewRequest("GET", "https://iam.amazonaws.com/?Action=ListUsers&Version=2010-05-08", nil)
+			req := newRequest("GET", "https://iam.amazonaws.com", url.Values{
+				"Action": []string{"ListUsers"},
+			})
 			resp := sign4AndDo(req)
 
 			if !envCredentialsSet() {
