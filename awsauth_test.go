@@ -1,18 +1,18 @@
 package awsauth
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 	"testing"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestIntegration(t *testing.T) {
 	Convey("Given real credentials from environment variables", t, func() {
-		Convey("A request to IAM should succeed <small>(assuming Administrator Access policy)</small>", func() {
-			req := newRequest("GET", "https://iam.amazonaws.com/?Action=ListRoles&Version=2010-05-08", url.Values{})
+		Convey("A request (with out-of-order query string) with to IAM should succeed (assuming Administrator Access policy)", func() {
+			req := newRequest("GET", "https://iam.amazonaws.com/?Version=2010-05-08&Action=ListRoles", url.Values{})
 			resp := sign4AndDo(req)
 
 			if !envCredentialsSet() {
