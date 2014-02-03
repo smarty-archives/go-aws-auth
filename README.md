@@ -12,10 +12,10 @@ Go-AWS-Auth intends to keep the ball in your court when actually performing the 
 
 ### Supported signing mechanisms
 
-- [Signed Signature Version 2]()
-- Signed Signature Version 4
-- Custom S3 Scheme
-- Custom Route 53 Scheme
+- [Signed Signature Version 2](http://docs.aws.amazon.com/general/latest/gr/signature-version-2.html)
+- [Signed Signature Version 3](http://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html)
+- [Signed Signature Version 4](http://docs.aws.amazon.com/general/latest/gr/signature-version-4.html)
+- Custom S3 Scheme 
 
 For more info, see the [comprehensive docs](http://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html) at AWS.
 
