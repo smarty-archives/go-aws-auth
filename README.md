@@ -3,17 +3,21 @@ go-aws-auth
 
 Go-AWS-Auth aims to be a comprehensive, lightweight library for signing requests to Amazon Web Services.
 
-With Go-AWS-Auth, you need not take any thought about authenticating with AWS. Simply build your requests with the needed parameters and call `awsauth.Sign(req)` before making your request to AWS.
+With Go-AWS-Auth, you need not take any thought about authenticating with AWS. Simply build your request however you need, then call `awsauth.Sign(req)` before sending your request over the wire.
 
-Go-AWS-Auth is intended to keep the ball in your court when actually performing the request, and is concerned merely with tackling the (rather involved) process of signing the request with your credentials.
+Go-AWS-Auth intends to keep the ball in your court when actually performing the request, and is concerned merely with tackling the (rather involved) process of signing the request with your credentials.
 
+**[Documentation at GoDoc](http://godoc.org/github.com/smartystreets/go-aws-auth)**
 
 
 ### Supported signing mechanisms
 
-- Signed Signature Version 2
+- [Signed Signature Version 2]()
 - Signed Signature Version 4
-- Custom S3 HTTP Scheme
+- Custom S3 Scheme
+- Custom Route 53 Scheme
+
+For more info, see the [comprehensive docs](http://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html) at AWS.
 
 
 ### Install

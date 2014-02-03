@@ -33,7 +33,7 @@ func TestIntegration(t *testing.T) {
 			}
 		})
 
-		Convey(`A request to EC2 should succeed`, func() {
+		Convey("A request to EC2 should succeed", func() {
 			req := newRequest("GET", "https://ec2.amazonaws.com", url.Values{
 				"Action": []string{"DescribeInstances"},
 			})
@@ -58,6 +58,28 @@ func TestIntegration(t *testing.T) {
 				So(resp.StatusCode, ShouldEqual, http.StatusOK)
 			}
 		})
+
+		Convey("A request to SES should succeed", func() {
+			req := newRequest("GET", "https://email.us-east-1.amazonaws.com/?Action=GetSendStatistics", url.Values{})
+			resp := sign3AndDo(req)
+
+			if !envCredentialsSet() {
+				SkipSo(resp.StatusCode, ShouldEqual, http.StatusOK)
+			} else {
+				So(resp.StatusCode, ShouldEqual, http.StatusOK)
+			}
+		})
+
+		Convey("A request to Route 53 should succeed", func() {
+			req := newRequest("GET", "https://route53.amazonaws.com/2013-04-01/hostedzone?maxitems=1", url.Values{})
+			resp := sign3AndDo(req)
+
+			if !envCredentialsSet() {
+				SkipSo(resp.StatusCode, ShouldEqual, http.StatusOK)
+			} else {
+				So(resp.StatusCode, ShouldEqual, http.StatusOK)
+			}
+		})
 	})
 }
 
@@ -70,6 +92,17 @@ func TestSign(t *testing.T) {
 		for _, req := range reqs {
 			signedReq := Sign(req)
 			So(signedReq.URL.Query().Get("SignatureVersion"), ShouldEqual, "2")
+		}
+	})
+
+	Convey("Requests to services using Version 3 should be signed accordingly", t, func() {
+		reqs := []*http.Request{
+			newRequest("GET", "https://route53.amazonaws.com", url.Values{}),
+			newRequest("GET", "https://email.us-east-1.amazonaws.com/", url.Values{}),
+		}
+		for _, req := range reqs {
+			signedReq := Sign(req)
+			So(signedReq.Header.Get("X-Amzn-Authorization"), ShouldNotBeBlank)
 		}
 	})
 
@@ -104,6 +137,12 @@ func newRequest(method string, url string, v url.Values) *http.Request {
 
 func sign2AndDo(req *http.Request) *http.Response {
 	Sign2(req)
+	resp, _ := client.Do(req)
+	return resp
+}
+
+func sign3AndDo(req *http.Request) *http.Response {
+	Sign3(req)
 	resp, _ := client.Do(req)
 	return resp
 }

@@ -25,6 +25,8 @@ func Sign(req *http.Request) *http.Request {
 	switch sigVersion {
 	case 2:
 		return Sign2(req)
+	case 3:
+		return Sign3(req)
 	case 4:
 		return Sign4(req)
 	case -1:
@@ -51,6 +53,24 @@ func Sign4(req *http.Request) *http.Request {
 	signature := signatureV4(signingKey, stringToSign)
 
 	req.Header.Set("Authorization", buildAuthHeaderV4(signature, meta))
+
+	return req
+}
+
+// Sign3 signs a request with Signed Signature Version 3.
+// If the service you're accessing supports Version 4, use that instead.
+func Sign3(req *http.Request) *http.Request {
+	checkKeys()
+	prepareRequestV3(req)
+
+	// Task 1
+	stringToSign := stringToSignV3(req)
+
+	// Task 2
+	signature := signatureV3(stringToSign)
+
+	// Task 3
+	req.Header.Set("X-Amzn-Authorization", buildAuthHeaderV3(signature))
 
 	return req
 }
@@ -102,24 +122,27 @@ const (
 )
 
 var awsSignVersion = map[string]int{
-	"autoscaling":       4,
-	"cloudformation":    4,
-	"cloudsearch":       4,
-	"monitoring":        4,
-	"dynamodb":          4,
-	"ec2":               2,
-	"elasticmapreduce":  4,
-	"elastictranscoder": 4,
-	"elasticache":       2,
-	"glacier":           4,
-	"redshift":          4,
-	"rds":               4,
-	"sdb":               2,
-	"sns":               4,
-	"sqs":               4,
-	"s3":                -1, // custom... thanks, Amazon...
-	"elasticbeanstalk":  4,
-	"importexport":      2,
-	"iam":               4,
+	"autoscaling":          4,
+	"cloudfront":           4,
+	"cloudformation":       4,
+	"cloudsearch":          4,
+	"monitoring":           4,
+	"dynamodb":             4,
+	"ec2":                  2,
+	"elasticmapreduce":     4,
+	"elastictranscoder":    4,
+	"elasticache":          2,
+	"glacier":              4,
+	"redshift":             4,
+	"rds":                  4,
+	"sdb":                  2,
+	"sns":                  4,
+	"sqs":                  4,
+	"s3":                   -1, // custom
+	"elasticbeanstalk":     4,
+	"importexport":         2,
+	"iam":                  4,
+	"route53":              3,
 	"elasticloadbalancing": 4,
+	"email":                3, // Simple Email Service (SES)
 }
