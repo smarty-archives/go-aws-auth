@@ -133,6 +133,7 @@ var awsSignVersion = map[string]int{
 	"elastictranscoder":    4,
 	"elasticache":          2,
 	"glacier":              4,
+	"kinesis":              4,
 	"redshift":             4,
 	"rds":                  4,
 	"sdb":                  2,
