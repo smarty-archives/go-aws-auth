@@ -82,7 +82,10 @@ func test_unsignedRequestV3() *http.Request {
 }
 
 var (
-	testCredV3             = &Credentials{"AKIAIOSFODNN7EXAMPLE", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY", ""}
+	testCredV3             = &Credentials{
+		AccessKeyID:     "AKIAIOSFODNN7EXAMPLE",
+		SecretAccessKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+	}
 	exampleReqTsV3         = "Thu, 14 Aug 2008 17:08:48 GMT"
 	baseUrlV3              = "https://email.us-east-1.amazonaws.com"
 	expectedStringToSignV3 = exampleReqTsV3

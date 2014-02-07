@@ -85,7 +85,10 @@ func test_unsignedRequestV2() *http.Request {
 }
 
 var (
-	testCredV2             = &Credentials{"AKIAIOSFODNN7EXAMPLE", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY", ""}
+	testCredV2             = &Credentials{
+		AccessKeyID:     "AKIAIOSFODNN7EXAMPLE",
+		SecretAccessKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+	}
 	exampleReqTsV2         = "2011-10-03T15:19:30"
 	baseUrlV2              = "https://elasticmapreduce.amazonaws.com"
 	canonicalQsV2          = "AWSAccessKeyId=AKIAIOSFODNN7EXAMPLE&Action=DescribeJobFlows&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-10-03T15%3A19%3A30&Version=2009-03-31"
