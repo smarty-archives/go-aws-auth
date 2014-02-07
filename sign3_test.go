@@ -82,7 +82,7 @@ func test_unsignedRequestV3() *http.Request {
 }
 
 var (
-	testCredV3             = &Credentials{
+	testCredV3 = &Credentials{
 		AccessKeyID:     "AKIAIOSFODNN7EXAMPLE",
 		SecretAccessKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
 	}
