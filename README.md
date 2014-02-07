@@ -35,9 +35,23 @@ Then import it:
 
 You can do it two ways.
 
-1. **Recommended:** Set the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables with your credentials. The library will automatically detect and use them.
+1. **Recommended:** Set the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables with your credentials. The library will automatically detect and use them. You may also optionally set the `AWS_SECURITY_TOKEN` environment variable if you are using temporary credentials from [STS](http://docs.aws.amazon.com/STS/latest/APIReference/Welcome.html).
 
-2. You can set `awsauth.Keys` with hard-coded credentials (for testing or spike code): `awsauth.Keys = &awsauth.Credentials{"Access Key ID", "Secret Access Key"}` 
+2. You can set `awsauth.Keys` with hard-coded credentials (for testing or spike code):
+```
+awsauth.Keys = &awsauth.Credentials{
+	AccessKeyID: "Access Key ID", 
+	SecretAccessKey: "Secret Access Key",
+}
+
+// You may include a security token
+
+awsauth.Keys = &awsauth.Credentials{
+	AccessKeyID: "Access Key ID", 
+	SecretAccessKey: "Secret Access Key",
+	SecurityToken: "Security Token",
+}
+```
 
 Setting the credentials manually will override environment variables.
 
