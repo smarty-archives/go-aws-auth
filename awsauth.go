@@ -103,6 +103,12 @@ func Sign2(req *http.Request) *http.Request {
 // HTTP authentication scheme.
 func SignS3(req *http.Request) *http.Request {
 	checkKeys()
+
+	// Add the X-Amz-Security-Token header when using STS
+	if Keys.SecurityToken != "" {
+		req.Header.Set("X-Amz-Security-Token", Keys.SecurityToken)
+	}
+
 	prepareRequestS3(req)
 
 	stringToSign := stringToSignS3(req)
