@@ -57,7 +57,7 @@ func TestVersion4STSRequestPreparer(t *testing.T) {
 		Convey("And a set of credentials with an STS token", func() {
 			Keys = testCredV4WithSTS
 
-			Convey("It should include an X-Amz-Security-Token", func() {
+			Convey("It should include an X-Amz-Security-Token when the request is signed", func() {
 				actualSigned := Sign4(req)
 				actual := actualSigned.Header.Get("X-Amz-Security-Token")
 
