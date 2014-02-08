@@ -80,6 +80,17 @@ func TestIntegration(t *testing.T) {
 				So(resp.StatusCode, ShouldEqual, http.StatusOK)
 			}
 		})
+
+		Convey("A request to SimpleDB should succeed", func() {
+			req := newRequest("GET", "https://sdb.amazonaws.com/?Action=ListDomains&Version=2009-04-15", url.Values{})
+			resp := sign2AndDo(req)
+
+			if !envCredentialsSet() {
+				SkipSo(resp.StatusCode, ShouldEqual, http.StatusOK)
+			} else {
+				So(resp.StatusCode, ShouldEqual, http.StatusOK)
+			}
+		})
 	})
 }
 
