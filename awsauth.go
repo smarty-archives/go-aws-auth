@@ -92,6 +92,16 @@ func Sign3(req *http.Request) *http.Request {
 // If the service you're accessing supports Version 4, use that instead.
 func Sign2(req *http.Request) *http.Request {
 	checkKeys()
+
+	// Add the SecurityToken parameter when using STS
+	// This must be added before the signature is calculated
+	if Keys.SecurityToken != "" {
+		v := url.Values{}
+		v.Set("SecurityToken", Keys.SecurityToken)
+		augmentRequestQuery(req, v)
+
+	}
+
 	prepareRequestV2(req)
 
 	stringToSign := stringToSignV2(req)

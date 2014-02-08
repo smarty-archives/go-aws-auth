@@ -62,6 +62,26 @@ func TestSignature2(t *testing.T) {
 	})
 }
 
+func TestVersion2STSRequestPreparer(t *testing.T) {
+	Convey("Given a plain request ", t, func() {
+		req := test_plainRequestV2()
+
+		Convey("And a set of credentials with an STS token", func() {
+			Keys = testCredV2WithSTS
+
+			Convey("It should include the SecurityToken parameter when the request is signed", func() {
+				actualSigned := Sign2(req)
+				actual := actualSigned.URL.Query()["SecurityToken"][0]
+
+				So(actual, ShouldNotBeBlank)
+				So(actual, ShouldEqual, testCredV2WithSTS.SecurityToken)
+
+			})
+		})
+	})
+
+}
+
 func test_plainRequestV2() *http.Request {
 	values := url.Values{}
 	values.Set("Action", "DescribeJobFlows")
@@ -89,6 +109,13 @@ var (
 		AccessKeyID:     "AKIAIOSFODNN7EXAMPLE",
 		SecretAccessKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
 	}
+
+	testCredV2WithSTS = &Credentials{
+		AccessKeyID:     "AKIDEXAMPLE",
+		SecretAccessKey: "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
+		SecurityToken:   "AQoDYXdzEHcaoAJ1Aqwx1Sum0iW2NQjXJcWlKR7vuB6lnAeGBaQnjDRZPVyniwc48ml5hx+0qiXenVJdfusMMl9XLhSncfhx9Rb1UF8IAOaQ+CkpWXvoH67YYN+93dgckSVgVEBRByTl/BvLOZhe0ii/pOWkuQtBm5T7lBHRe4Dfmxy9X6hd8L3FrWxgnGV3fWZ3j0gASdYXaa+VBJlU0E2/GmCzn3T+t2mjYaeoInAnYVKVpmVMOrh6lNAeETTOHElLopblSa7TAmROq5xHIyu4a9i2qwjERTwa3Yk4Jk6q7JYVA5Cu7kS8wKVml8LdzzCTsy+elJgvH+Jf6ivpaHt/En0AJ5PZUJDev2+Y5+9j4AYfrmXfm4L73DC1ZJFJrv+Yh+EXAMPLE=",
+	}
+
 	exampleReqTsV2         = "2011-10-03T15:19:30"
 	baseUrlV2              = "https://elasticmapreduce.amazonaws.com"
 	canonicalQsV2          = "AWSAccessKeyId=AKIAIOSFODNN7EXAMPLE&Action=DescribeJobFlows&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-10-03T15%3A19%3A30&Version=2009-03-31"
