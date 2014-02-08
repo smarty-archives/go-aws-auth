@@ -68,6 +68,12 @@ func Sign4(req *http.Request) *http.Request {
 // If the service you're accessing supports Version 4, use that instead.
 func Sign3(req *http.Request) *http.Request {
 	checkKeys()
+
+	// Add the X-Amz-Security-Token header when using STS
+	if Keys.SecurityToken != "" {
+		req.Header.Set("X-Amz-Security-Token", Keys.SecurityToken)
+	}
+
 	prepareRequestV3(req)
 
 	// Task 1
