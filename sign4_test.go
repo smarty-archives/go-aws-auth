@@ -1,11 +1,11 @@
 package awsauth
 
 import (
+	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/url"
 	"strings"
 	"testing"
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestVersion4RequestPreparer(t *testing.T) {
@@ -48,6 +48,26 @@ func TestVersion4RequestPreparer(t *testing.T) {
 			So(req, ShouldResemble, test_unsignedRequestV4(true))
 		})
 	})
+}
+
+func TestVersion4STSRequestPreparer(t *testing.T) {
+	Convey("Given a plain request with no custom headers", t, func() {
+		req := test_plainRequestV4(false)
+
+		Convey("And a set of credentials with an STS token", func() {
+			Keys = testCredV4WithSTS
+
+			Convey("It should include an X-Amz-Security-Token when the request is signed", func() {
+				actualSigned := Sign4(req)
+				actual := actualSigned.Header.Get("X-Amz-Security-Token")
+
+				So(actual, ShouldNotBeBlank)
+				So(actual, ShouldEqual, testCredV4WithSTS.SecurityToken)
+
+			})
+		})
+	})
+
 }
 
 func TestVersion4SigningTasks(t *testing.T) {
@@ -164,8 +184,14 @@ func test_signingKeyV4() []byte {
 
 var (
 	testCredV4 = &Credentials{
-		"AKIDEXAMPLE",
-		"wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
+		AccessKeyID:     "AKIDEXAMPLE",
+		SecretAccessKey: "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
+	}
+
+	testCredV4WithSTS = &Credentials{
+		AccessKeyID:     "AKIDEXAMPLE",
+		SecretAccessKey: "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
+		SecurityToken:   "AQoDYXdzEHcaoAJ1Aqwx1Sum0iW2NQjXJcWlKR7vuB6lnAeGBaQnjDRZPVyniwc48ml5hx+0qiXenVJdfusMMl9XLhSncfhx9Rb1UF8IAOaQ+CkpWXvoH67YYN+93dgckSVgVEBRByTl/BvLOZhe0ii/pOWkuQtBm5T7lBHRe4Dfmxy9X6hd8L3FrWxgnGV3fWZ3j0gASdYXaa+VBJlU0E2/GmCzn3T+t2mjYaeoInAnYVKVpmVMOrh6lNAeETTOHElLopblSa7TAmROq5xHIyu4a9i2qwjERTwa3Yk4Jk6q7JYVA5Cu7kS8wKVml8LdzzCTsy+elJgvH+Jf6ivpaHt/En0AJ5PZUJDev2+Y5+9j4AYfrmXfm4L73DC1ZJFJrv+Yh+EXAMPLE=",
 	}
 
 	expectingV4 = map[string]string{

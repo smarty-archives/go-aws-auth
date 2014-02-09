@@ -1,12 +1,12 @@
 package awsauth
 
 import (
+	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 	"testing"
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestIntegration(t *testing.T) {
@@ -73,6 +73,17 @@ func TestIntegration(t *testing.T) {
 		Convey("A request to Route 53 should succeed", func() {
 			req := newRequest("GET", "https://route53.amazonaws.com/2013-04-01/hostedzone?maxitems=1", url.Values{})
 			resp := sign3AndDo(req)
+
+			if !envCredentialsSet() {
+				SkipSo(resp.StatusCode, ShouldEqual, http.StatusOK)
+			} else {
+				So(resp.StatusCode, ShouldEqual, http.StatusOK)
+			}
+		})
+
+		Convey("A request to SimpleDB should succeed", func() {
+			req := newRequest("GET", "https://sdb.amazonaws.com/?Action=ListDomains&Version=2009-04-15", url.Values{})
+			resp := sign2AndDo(req)
 
 			if !envCredentialsSet() {
 				SkipSo(resp.StatusCode, ShouldEqual, http.StatusOK)

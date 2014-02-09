@@ -46,6 +46,7 @@ func checkKeys() {
 		Keys = &Credentials{
 			os.Getenv(envAccessKeyID),
 			os.Getenv(envSecretAccessKey),
+			os.Getenv(envSecurityToken),
 		}
 	}
 }

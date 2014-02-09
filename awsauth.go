@@ -14,6 +14,7 @@ var Keys *Credentials
 type Credentials struct {
 	AccessKeyID     string
 	SecretAccessKey string
+	SecurityToken   string
 }
 
 // Sign signs a request bound for AWS. It automatically chooses the best
@@ -39,6 +40,12 @@ func Sign(req *http.Request) *http.Request {
 // Sign4 signs a request with Signed Signature Version 4.
 func Sign4(req *http.Request) *http.Request {
 	checkKeys()
+
+	// Add the X-Amz-Security-Token header when using STS
+	if Keys.SecurityToken != "" {
+		req.Header.Set("X-Amz-Security-Token", Keys.SecurityToken)
+	}
+
 	prepareRequestV4(req)
 	meta := new(metadata)
 
@@ -61,6 +68,12 @@ func Sign4(req *http.Request) *http.Request {
 // If the service you're accessing supports Version 4, use that instead.
 func Sign3(req *http.Request) *http.Request {
 	checkKeys()
+
+	// Add the X-Amz-Security-Token header when using STS
+	if Keys.SecurityToken != "" {
+		req.Header.Set("X-Amz-Security-Token", Keys.SecurityToken)
+	}
+
 	prepareRequestV3(req)
 
 	// Task 1
@@ -79,6 +92,16 @@ func Sign3(req *http.Request) *http.Request {
 // If the service you're accessing supports Version 4, use that instead.
 func Sign2(req *http.Request) *http.Request {
 	checkKeys()
+
+	// Add the SecurityToken parameter when using STS
+	// This must be added before the signature is calculated
+	if Keys.SecurityToken != "" {
+		v := url.Values{}
+		v.Set("SecurityToken", Keys.SecurityToken)
+		augmentRequestQuery(req, v)
+
+	}
+
 	prepareRequestV2(req)
 
 	stringToSign := stringToSignV2(req)
@@ -96,6 +119,12 @@ func Sign2(req *http.Request) *http.Request {
 // HTTP authentication scheme.
 func SignS3(req *http.Request) *http.Request {
 	checkKeys()
+
+	// Add the X-Amz-Security-Token header when using STS
+	if Keys.SecurityToken != "" {
+		req.Header.Set("X-Amz-Security-Token", Keys.SecurityToken)
+	}
+
 	prepareRequestS3(req)
 
 	stringToSign := stringToSignS3(req)
@@ -119,6 +148,7 @@ type metadata struct {
 const (
 	envAccessKeyID     = "AWS_ACCESS_KEY_ID"
 	envSecretAccessKey = "AWS_SECRET_ACCESS_KEY"
+	envSecurityToken   = "AWS_SECURITY_TOKEN"
 )
 
 var awsSignVersion = map[string]int{

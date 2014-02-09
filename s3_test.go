@@ -61,8 +61,38 @@ func test_headerRequestS3() *http.Request {
 	return req
 }
 
+func TestS3STSRequestPreparer(t *testing.T) {
+	Convey("Given a plain request with no custom headers", t, func() {
+		req := test_plainRequestS3()
+
+		Convey("And a set of credentials with an STS token", func() {
+			Keys = testCredS3WithSTS
+
+			Convey("It should include an X-Amz-Security-Token when the request is signed", func() {
+				actualSigned := SignS3(req)
+				actual := actualSigned.Header.Get("X-Amz-Security-Token")
+
+				So(actual, ShouldNotBeBlank)
+				So(actual, ShouldEqual, testCredS3WithSTS.SecurityToken)
+
+			})
+		})
+	})
+
+}
+
 var (
-	testCredS3                = &Credentials{"AKIAIOSFODNN7EXAMPLE", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"}
+	testCredS3 = &Credentials{
+		AccessKeyID:     "AKIAIOSFODNN7EXAMPLE",
+		SecretAccessKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+	}
+
+	testCredS3WithSTS = &Credentials{
+		AccessKeyID:     "AKIDEXAMPLE",
+		SecretAccessKey: "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
+		SecurityToken:   "AQoDYXdzEHcaoAJ1Aqwx1Sum0iW2NQjXJcWlKR7vuB6lnAeGBaQnjDRZPVyniwc48ml5hx+0qiXenVJdfusMMl9XLhSncfhx9Rb1UF8IAOaQ+CkpWXvoH67YYN+93dgckSVgVEBRByTl/BvLOZhe0ii/pOWkuQtBm5T7lBHRe4Dfmxy9X6hd8L3FrWxgnGV3fWZ3j0gASdYXaa+VBJlU0E2/GmCzn3T+t2mjYaeoInAnYVKVpmVMOrh6lNAeETTOHElLopblSa7TAmROq5xHIyu4a9i2qwjERTwa3Yk4Jk6q7JYVA5Cu7kS8wKVml8LdzzCTsy+elJgvH+Jf6ivpaHt/En0AJ5PZUJDev2+Y5+9j4AYfrmXfm4L73DC1ZJFJrv+Yh+EXAMPLE=",
+	}
+
 	expectedCanonAmzHeadersS3 = "x-amz-date:foobar\nx-amz-meta-something:more foobar\n"
 	expectedCanonResourceS3   = "/johnsmith/photos/puppy.jpg"
 	expectedStringToSignS3    = "GET\n\n\nTue, 27 Mar 2007 19:36:42 +0000\n/johnsmith/photos/puppy.jpg"
