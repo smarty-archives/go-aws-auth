@@ -14,7 +14,7 @@ var Keys *Credentials
 type Credentials struct {
 	AccessKeyID     string
 	SecretAccessKey string
-	SecurityToken   string
+	SecurityToken   string `json:"Token"`
 }
 
 // Sign signs a request bound for AWS. It automatically chooses the best

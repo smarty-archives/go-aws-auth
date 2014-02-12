@@ -4,7 +4,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/url"
-	"os"
+	//"os"
 	"strings"
 	"testing"
 )
@@ -138,7 +138,8 @@ func TestSign(t *testing.T) {
 }
 
 func envCredentialsSet() bool {
-	return os.Getenv(envAccessKeyID) != "" && os.Getenv(envSecretAccessKey) != ""
+	// return os.Getenv(envAccessKeyID) != "" && os.Getenv(envSecretAccessKey) != ""
+	return true
 }
 
 func newRequest(method string, url string, v url.Values) *http.Request {
