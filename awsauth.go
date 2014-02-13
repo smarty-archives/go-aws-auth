@@ -5,6 +5,7 @@ package awsauth
 import (
 	"net/http"
 	"net/url"
+	"time"
 )
 
 // Keys stores the authentication credentials to be used when signing requests.
@@ -132,6 +133,25 @@ func SignS3(req *http.Request) *http.Request {
 
 	authHeader := "AWS " + Keys.AccessKeyID + ":" + signature
 	req.Header.Set("Authorization", authHeader)
+
+	return req
+}
+
+// SignS3Url signs a GET request for a resource on Amazon S3 by appending
+// query string parameters containing credentials and signature. You must
+// specify an expiration date for these signed requests. After that date,
+// a request signed with this method will be rejected by S3.
+func SignS3Url(req *http.Request, expire time.Time) *http.Request {
+	checkKeys()
+
+	stringToSign := stringToSignS3Url("GET", expire, req.URL.Path)
+	signature := signatureS3(stringToSign)
+
+	qs := req.URL.Query()
+	qs.Set("AWSAccessKeyId", Keys.AccessKeyID)
+	qs.Set("Signature", signature)
+	qs.Set("Expires", timeToUnixEpochString(expire))
+	req.URL.RawQuery = qs.Encode()
 
 	return req
 }

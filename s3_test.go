@@ -1,10 +1,10 @@
 package awsauth
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"testing"
 	"time"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestSignatureS3(t *testing.T) {
@@ -46,19 +46,26 @@ func TestSignatureS3(t *testing.T) {
 			So(actual, ShouldEqual, "bWq2s1WEIj+Ydj0vQ697zp+IXMU=")
 		})
 	})
-}
 
-func test_plainRequestS3() *http.Request {
-	req, _ := http.NewRequest("GET", "https://johnsmith.s3.amazonaws.com/photos/puppy.jpg", nil)
-	return req
-}
+	Convey("Given a GET request for a resource on S3 for query string authentication", t, func() {
+		Keys = testCredS3
+		req, _ := http.NewRequest("GET", "https://johnsmith.s3.amazonaws.com/johnsmith/photos/puppy.jpg", nil)
 
-func test_headerRequestS3() *http.Request {
-	req := test_plainRequestS3()
-	req.Header.Set("X-Amz-Meta-Something", "more foobar")
-	req.Header.Set("X-Amz-Date", "foobar")
-	req.Header.Set("X-Foobar", "nanoo-nanoo")
-	return req
+		now = func() time.Time {
+			parsed, _ := time.Parse(timeFormatS3, exampleReqTsS3)
+			return parsed
+		}
+
+		Convey("The string to sign should be correct", func() {
+			actual := stringToSignS3Url("GET", now(), req.URL.Path)
+			So(actual, ShouldEqual, expectedStringToSignS3Url)
+		})
+
+		Convey("The signature of string to sign should be correct", func() {
+			actual := signatureS3(expectedStringToSignS3Url)
+			So(actual, ShouldEqual, "R2K/+9bbnBIbVDCs7dqlz3XFtBQ=")
+		})
+	})
 }
 
 func TestS3STSRequestPreparer(t *testing.T) {
@@ -78,7 +85,19 @@ func TestS3STSRequestPreparer(t *testing.T) {
 			})
 		})
 	})
+}
 
+func test_plainRequestS3() *http.Request {
+	req, _ := http.NewRequest("GET", "https://johnsmith.s3.amazonaws.com/photos/puppy.jpg", nil)
+	return req
+}
+
+func test_headerRequestS3() *http.Request {
+	req := test_plainRequestS3()
+	req.Header.Set("X-Amz-Meta-Something", "more foobar")
+	req.Header.Set("X-Amz-Date", "foobar")
+	req.Header.Set("X-Foobar", "nanoo-nanoo")
+	return req
 }
 
 var (
@@ -96,5 +115,6 @@ var (
 	expectedCanonAmzHeadersS3 = "x-amz-date:foobar\nx-amz-meta-something:more foobar\n"
 	expectedCanonResourceS3   = "/johnsmith/photos/puppy.jpg"
 	expectedStringToSignS3    = "GET\n\n\nTue, 27 Mar 2007 19:36:42 +0000\n/johnsmith/photos/puppy.jpg"
+	expectedStringToSignS3Url = "GET\n\n\n1175024202\n/johnsmith/photos/puppy.jpg"
 	exampleReqTsS3            = "Tue, 27 Mar 2007 19:36:42 +0000"
 )

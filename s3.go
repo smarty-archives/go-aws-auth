@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -34,6 +35,14 @@ func stringToSignS3(req *http.Request) string {
 	str += canonicalResourceS3(req)
 
 	return str
+}
+
+func stringToSignS3Url(method string, expire time.Time, path string) string {
+	return method + "\n\n\n" + timeToUnixEpochString(expire) + "\n" + path
+}
+
+func timeToUnixEpochString(t time.Time) string {
+	return strconv.FormatInt(t.Unix(), 10)
 }
 
 func canonicalAmzHeadersS3(req *http.Request) string {
