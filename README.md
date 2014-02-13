@@ -5,7 +5,7 @@ Go-AWS-Auth is a comprehensive, lightweight library for signing requests to Amaz
 
 It's easy to use: simply build your HTTP request, then call `awsauth.Sign(req)` before sending your request over the wire.
 
-**[GoDoc Documentation](http://godoc.org/github.com/smartystreets/go-aws-auth)**
+**[Full GoDoc Documentation](http://godoc.org/github.com/smartystreets/go-aws-auth)**
 
 
 ### Supported signing mechanisms
@@ -15,10 +15,10 @@ It's easy to use: simply build your HTTP request, then call `awsauth.Sign(req)` 
 - [Signed Signature Version 4](http://docs.aws.amazon.com/general/latest/gr/signature-version-4.html)
 - [Custom S3 Authentication Scheme](http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html)
 - [Security Token Service](http://docs.aws.amazon.com/STS/latest/APIReference/Welcome.html)
-- Coming soon: [S3 Query String Authentication](http://docs.aws.amazon.com/AmazonS3/latest/dev/S3_QSAuth.html)
+- [S3 Query String Authentication](http://docs.aws.amazon.com/AmazonS3/latest/dev/S3_QSAuth.html)
 - Coming soon: IAM Role Authentication
 
-For more info, see the [comprehensive docs](http://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html) at AWS.
+For more info about AWS authentication, see the [comprehensive docs](http://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html) at AWS.
 
 
 ### Install
@@ -36,7 +36,7 @@ Then import it:
 
 You can do it two ways.
 
-1. **Recommended:** Set the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables with your credentials. The library will automatically detect and use them. You may also optionally set the `AWS_SECURITY_TOKEN` environment variable if you are using temporary credentials from [STS](http://docs.aws.amazon.com/STS/latest/APIReference/Welcome.html).
+1. **Recommended:** Set the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables with your credentials. The library will automatically detect and use them. Optionally, you may also set the `AWS_SECURITY_TOKEN` environment variable if you are using temporary credentials from [STS](http://docs.aws.amazon.com/STS/latest/APIReference/Welcome.html).
 
 2. You can set `awsauth.Keys` with hard-coded credentials (for testing or spike code):
 ```go
@@ -65,7 +65,6 @@ awsauth.Sign(req)	// Automatically chooses the best signing mechanism for the se
 
 resp, err := client.Do(req)
 ```
-
 
 
 ### Contributing
