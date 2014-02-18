@@ -11,12 +11,13 @@ import (
 // Keys stores the authentication credentials to be used when signing requests.
 // You can set them manually or leave it to awsauth to use environment variables.
 var Keys *Credentials
+var emptyTime time.Time
 
 type Credentials struct {
 	AccessKeyID     string
 	SecretAccessKey string
 	SecurityToken   string `json:"Token"`
-	Expiration      string
+	Expiration      time.Time
 }
 
 // expired checks to see if the temporary credentials from an IAM role are
@@ -24,19 +25,20 @@ type Credentials struct {
 // will be provisioned 5 minutes before the old keys expire). Credentials
 // that do not have an Expiration cannot expire.
 func (k *Credentials) expired() bool {
-	if k.Expiration == "" {
+
+	if k.Expiration == emptyTime {
 		// Credentials with no expiration can't expire
 		return false
 	}
-	const awsform = "2006-01-02T15:04:05Z"
-	t, _ := time.Parse(awsform, k.Expiration)
-	expireTime := t.Add(4 * time.Minute)
+
+	expireTime := k.Expiration.Add(4 * time.Minute)
 	// if t + 4 mins is after now, true
 	if expireTime.After(time.Now()) {
 		return true
 	} else {
 		return false
 	}
+
 }
 
 // Sign signs a request bound for AWS. It automatically chooses the best
