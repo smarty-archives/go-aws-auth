@@ -59,18 +59,21 @@ func checkKeys() {
 			SecurityToken:   os.Getenv(envSecurityToken),
 		}
 	}
-	// if accesskey and the secretkey are blank, get the key from the role
-	if Keys.AccessKeyID == "" && onEC2() {
 
+	// If there is no Access Key and you are on EC2, get the key from the role
+	if Keys.AccessKeyID == "" && onEC2() {
 		Keys = getIAMRoleCredentials()
 	}
 
-	// if the expiration is set and it's less than 5 minutes in the future, get a new key
+	// If the key is expiring, get a new key
 	if Keys.expired() && onEC2() {
 		Keys = getIAMRoleCredentials()
 	}
 }
 
+// onEC2 checks to see if the program is running on an EC2 instance.
+// It does this by looking for the EC2 metadata service.
+// This caches that information in a struct so that it doesn't waste time.
 func onEC2() bool {
 	if loc == nil {
 		loc = &location{}
