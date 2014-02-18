@@ -20,7 +20,7 @@ type Credentials struct {
 }
 
 func (k *Credentials) Expired() bool {
-	if k.Expiration != "" {
+	if k.Expiration == "" {
 		// Credentials with no expiration can't expire
 		return false
 	}
