@@ -1,6 +1,7 @@
 package awsauth
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/hmac"
 	"crypto/md5"
@@ -58,29 +59,47 @@ func checkKeys() {
 	// if the expiration is set and it's less than 5 minutes in the future, get a new key
 }
 
-func getIAMRoleCredentials() *Credentials {
-
-	// Hack city!!
-
+func getIAMRoleList() []string {
 	// Get a list of the roles that are available to this instance
 	url := "http://169.254.169.254/latest/meta-data/iam/security-credentials/"
 	client := &http.Client{}
 	req, _ := http.NewRequest("GET", url, nil)
 	resp, _ := client.Do(req)
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	role := buf.String()
 
-	// append the url to get the url to the role
+	// buf := new(bytes.Buffer)
+	// buf.ReadFrom(resp.Body)
+	// role := buf.String()
+
+	var roles []string
+
+	scanner := bufio.NewScanner(resp.Body)
+	for scanner.Scan() {
+		roles = append(roles, scanner.Text())
+	}
+	return roles
+}
+
+func getIAMRoleCredentials() *Credentials {
+
+	roles := getIAMRoleList()
+
+	if len(roles) < 1 {
+		return &Credentials{}
+	}
+
+	// Use the first role in the list
+	role := roles[0]
+
+	url := "http://169.254.169.254/latest/meta-data/iam/security-credentials/"
+
+	// Create the full URL of the role
 	var buffer bytes.Buffer
 	buffer.WriteString(url)
 	buffer.WriteString(role)
 	roleurl := buffer.String()
 
 	// Get the role
-
 	rolereq, _ := http.NewRequest("GET", roleurl, nil)
-
 	roleresp, _ := client.Do(rolereq)
 	rolebuf := new(bytes.Buffer)
 	rolebuf.ReadFrom(roleresp.Body)
