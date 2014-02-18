@@ -58,7 +58,7 @@ func checkKeys() {
 	}
 
 	// if the expiration is set and it's less than 5 minutes in the future, get a new key
-	if Keys.Expired() {
+	if Keys.expired() {
 		Keys = getIAMRoleCredentials()
 	}
 }

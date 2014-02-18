@@ -19,7 +19,11 @@ type Credentials struct {
 	Expiration      string
 }
 
-func (k *Credentials) Expired() bool {
+// expired checks to see if the temporary credentials from an IAM role are
+// within 4 minutes of expiration (The IAM documentation says that new keys
+// will be provisioned 5 minutes before the old keys expire). Credentials
+// that do not have an Expiration cannot expire.
+func (k *Credentials) expired() bool {
 	if k.Expiration == "" {
 		// Credentials with no expiration can't expire
 		return false
