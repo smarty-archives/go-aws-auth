@@ -19,6 +19,13 @@ import (
 	"time"
 )
 
+type location struct {
+	ec2     bool
+	checked bool
+}
+
+var loc *location
+
 func serviceAndRegion(host string) (string, string) {
 	var region, service string
 	parts := strings.Split(host, ".")
@@ -65,15 +72,23 @@ func checkKeys() {
 }
 
 func onEC2() bool {
-
-	c, err := net.DialTimeout("tcp", "169.254.169.254:80", time.Second)
-
-	if err != nil {
-		return false
-	} else {
-		c.Close()
-		return true
+	if loc == nil {
+		loc = &location{}
 	}
+	if !(loc.checked) {
+		fmt.Println("Checking location...")
+		c, err := net.DialTimeout("tcp", "169.254.169.254:80", time.Second)
+
+		if err != nil {
+			loc.ec2 = false
+		} else {
+			c.Close()
+			loc.ec2 = true
+		}
+		loc.checked = true
+	}
+
+	return loc.ec2
 }
 
 // getIAMRoleList gets a list of the roles that are available to this instance
