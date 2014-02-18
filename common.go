@@ -59,7 +59,7 @@ func checkKeys() {
 	}
 
 	// if the expiration is set and it's less than 5 minutes in the future, get a new key
-	if Keys.expired() {
+	if Keys.expired() && onEC2() {
 		Keys = getIAMRoleCredentials()
 	}
 }
@@ -76,18 +76,25 @@ func onEC2() bool {
 	}
 }
 
+// getIAMRoleList gets a list of the roles that are available to this instance
 func getIAMRoleList() []string {
-	// Get a list of the roles that are available to this instance
-	url := "http://169.254.169.254/latest/meta-data/iam/security-credentials/"
-	client := &http.Client{}
-	req, _ := http.NewRequest("GET", url, nil)
-	resp, _ := client.Do(req)
-
-	// buf := new(bytes.Buffer)
-	// buf.ReadFrom(resp.Body)
-	// role := buf.String()
 
 	var roles []string
+	url := "http://169.254.169.254/latest/meta-data/iam/security-credentials/"
+
+	client := &http.Client{}
+
+	req, err := http.NewRequest("GET", url, nil)
+
+	if err != nil {
+		return roles
+	}
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return roles
+	}
 
 	scanner := bufio.NewScanner(resp.Body)
 	for scanner.Scan() {
@@ -116,14 +123,28 @@ func getIAMRoleCredentials() *Credentials {
 	roleurl := buffer.String()
 
 	// Get the role
-	rolereq, _ := http.NewRequest("GET", roleurl, nil)
-	roleresp, _ := client.Do(rolereq)
+	rolereq, err := http.NewRequest("GET", roleurl, nil)
+
+	if err != nil {
+		return &Credentials{}
+	}
+
+	roleresp, err := client.Do(rolereq)
+
+	if err != nil {
+		return &Credentials{}
+	}
+
 	rolebuf := new(bytes.Buffer)
 	rolebuf.ReadFrom(roleresp.Body)
 
 	creds := Credentials{}
 
-	_ = json.Unmarshal(rolebuf.Bytes(), &creds)
+	err = json.Unmarshal(rolebuf.Bytes(), &creds)
+
+	if err != nil {
+		return &Credentials{}
+	}
 
 	return &creds
 
