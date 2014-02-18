@@ -7,6 +7,7 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -14,7 +15,6 @@ import (
 	"os"
 	"strings"
 	"time"
-	"encoding/json"
 )
 
 func serviceAndRegion(host string) (string, string) {
@@ -48,19 +48,18 @@ func checkKeys() {
 			os.Getenv(envAccessKeyID),
 			os.Getenv(envSecretAccessKey),
 			os.Getenv(envSecurityToken),
-		
 		}
 	}
 	// if accesskey and the secretkey are blank, get the key from the role
 	if Keys.AccessKeyID == "" {
-	
+
 		Keys = getIAMRoleCredentials()
 	}
 	// if the expiration is set and it's less than 5 minutes in the future, get a new key
 }
 
 func getIAMRoleCredentials() *Credentials {
-	
+
 	// Hack city!!
 
 	// Get a list of the roles that are available to this instance
@@ -72,8 +71,6 @@ func getIAMRoleCredentials() *Credentials {
 	buf.ReadFrom(resp.Body)
 	role := buf.String()
 
-	
-
 	// append the url to get the url to the role
 	var buffer bytes.Buffer
 	buffer.WriteString(url)
@@ -83,18 +80,17 @@ func getIAMRoleCredentials() *Credentials {
 	// Get the role
 
 	rolereq, _ := http.NewRequest("GET", roleurl, nil)
-	
-	
+
 	roleresp, _ := client.Do(rolereq)
 	rolebuf := new(bytes.Buffer)
 	rolebuf.ReadFrom(roleresp.Body)
-	
+
 	creds := Credentials{}
 
 	_ = json.Unmarshal(rolebuf.Bytes(), &creds)
-	
+
 	return &creds
-	
+
 }
 
 func augmentRequestQuery(req *http.Request, values url.Values) *http.Request {

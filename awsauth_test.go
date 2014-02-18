@@ -4,7 +4,6 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/url"
-	//"os"
 	"strings"
 	"testing"
 )
@@ -15,7 +14,7 @@ func TestIntegration(t *testing.T) {
 			req := newRequest("GET", "https://iam.amazonaws.com/?Version=2010-05-08&Action=ListRoles", url.Values{})
 			resp := sign4AndDo(req)
 
-			if !envCredentialsSet() {
+			if !credentialsSet() {
 				SkipSo(resp.StatusCode, ShouldEqual, http.StatusOK)
 			} else {
 				So(resp.StatusCode, ShouldEqual, http.StatusOK)
@@ -26,7 +25,7 @@ func TestIntegration(t *testing.T) {
 			req, _ := http.NewRequest("GET", "https://s3.amazonaws.com", nil)
 			resp := signS3AndDo(req)
 
-			if !envCredentialsSet() {
+			if !credentialsSet() {
 				SkipSo(resp.StatusCode, ShouldEqual, http.StatusOK)
 			} else {
 				So(resp.StatusCode, ShouldEqual, http.StatusOK)
@@ -39,7 +38,7 @@ func TestIntegration(t *testing.T) {
 			})
 			resp := sign2AndDo(req)
 
-			if !envCredentialsSet() {
+			if !credentialsSet() {
 				SkipSo(resp.StatusCode, ShouldEqual, http.StatusOK)
 			} else {
 				So(resp.StatusCode, ShouldEqual, http.StatusOK)
@@ -52,7 +51,7 @@ func TestIntegration(t *testing.T) {
 			})
 			resp := sign4AndDo(req)
 
-			if !envCredentialsSet() {
+			if !credentialsSet() {
 				SkipSo(resp.StatusCode, ShouldEqual, http.StatusOK)
 			} else {
 				So(resp.StatusCode, ShouldEqual, http.StatusOK)
@@ -63,7 +62,7 @@ func TestIntegration(t *testing.T) {
 			req := newRequest("GET", "https://email.us-east-1.amazonaws.com/?Action=GetSendStatistics", url.Values{})
 			resp := sign3AndDo(req)
 
-			if !envCredentialsSet() {
+			if !credentialsSet() {
 				SkipSo(resp.StatusCode, ShouldEqual, http.StatusOK)
 			} else {
 				So(resp.StatusCode, ShouldEqual, http.StatusOK)
@@ -74,7 +73,7 @@ func TestIntegration(t *testing.T) {
 			req := newRequest("GET", "https://route53.amazonaws.com/2013-04-01/hostedzone?maxitems=1", url.Values{})
 			resp := sign3AndDo(req)
 
-			if !envCredentialsSet() {
+			if !credentialsSet() {
 				SkipSo(resp.StatusCode, ShouldEqual, http.StatusOK)
 			} else {
 				So(resp.StatusCode, ShouldEqual, http.StatusOK)
@@ -85,7 +84,7 @@ func TestIntegration(t *testing.T) {
 			req := newRequest("GET", "https://sdb.amazonaws.com/?Action=ListDomains&Version=2009-04-15", url.Values{})
 			resp := sign2AndDo(req)
 
-			if !envCredentialsSet() {
+			if !credentialsSet() {
 				SkipSo(resp.StatusCode, ShouldEqual, http.StatusOK)
 			} else {
 				So(resp.StatusCode, ShouldEqual, http.StatusOK)
@@ -137,9 +136,13 @@ func TestSign(t *testing.T) {
 	})
 }
 
-func envCredentialsSet() bool {
-	// return os.Getenv(envAccessKeyID) != "" && os.Getenv(envSecretAccessKey) != ""
-	return true
+func credentialsSet() bool {
+	checkKeys()
+	if Keys.AccessKeyID == "" {
+		return false
+	} else {
+		return true
+	}
 }
 
 func newRequest(method string, url string, v url.Values) *http.Request {
