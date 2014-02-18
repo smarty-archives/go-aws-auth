@@ -154,7 +154,7 @@ func TestExpiration(t *testing.T) {
 		So(c.expired(), ShouldBeTrue)
 	})
 
-	Convey("Credentials that expired in 2 hours ago are expired", t, func() {
+	Convey("Credentials that expired 2 hours ago are expired", t, func() {
 		c.Expiration = time.Now().Add(-2 * time.Hour)
 		So(c.expired(), ShouldBeTrue)
 	})
