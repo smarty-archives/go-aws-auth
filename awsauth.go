@@ -5,6 +5,7 @@ package awsauth
 import (
 	"net/http"
 	"net/url"
+	"time"
 )
 
 // Keys stores the authentication credentials to be used when signing requests.
@@ -15,6 +16,23 @@ type Credentials struct {
 	AccessKeyID     string
 	SecretAccessKey string
 	SecurityToken   string `json:"Token"`
+	Expiration      string
+}
+
+func (k *Credentials) Expired() bool {
+	if k.Expiration != "" {
+		// Credentials with no expiration can't expire
+		return false
+	}
+	const awsform = "2006-01-02T15:04:05Z"
+	t, _ := time.Parse(awsform, k.Expiration)
+	expireTime := t.Add(4 * time.Minute)
+	// if t + 4 mins is after now, true
+	if expireTime.After(time.Now()) {
+		return true
+	} else {
+		return false
+	}
 }
 
 // Sign signs a request bound for AWS. It automatically chooses the best

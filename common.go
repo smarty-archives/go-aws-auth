@@ -46,9 +46,9 @@ func serviceAndRegion(host string) (string, string) {
 func checkKeys() {
 	if Keys == nil {
 		Keys = &Credentials{
-			os.Getenv(envAccessKeyID),
-			os.Getenv(envSecretAccessKey),
-			os.Getenv(envSecurityToken),
+			AccessKeyID:     os.Getenv(envAccessKeyID),
+			SecretAccessKey: os.Getenv(envSecretAccessKey),
+			SecurityToken:   os.Getenv(envSecurityToken),
 		}
 	}
 	// if accesskey and the secretkey are blank, get the key from the role
@@ -56,7 +56,11 @@ func checkKeys() {
 
 		Keys = getIAMRoleCredentials()
 	}
+
 	// if the expiration is set and it's less than 5 minutes in the future, get a new key
+	if Keys.Expired() {
+		Keys = getIAMRoleCredentials()
+	}
 }
 
 func getIAMRoleList() []string {
