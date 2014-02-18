@@ -31,9 +31,9 @@ func (k *Credentials) expired() bool {
 		return false
 	}
 
-	expireTime := k.Expiration.Add(4 * time.Minute)
-	// if t + 4 mins is after now, true
-	if expireTime.After(time.Now()) {
+	expireTime := k.Expiration.Add(-4 * time.Minute)
+	// if t - 4 mins is before now, true
+	if expireTime.Before(time.Now()) {
 		return true
 	} else {
 		return false

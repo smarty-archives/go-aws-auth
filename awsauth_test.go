@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestIntegration(t *testing.T) {
@@ -133,6 +134,29 @@ func TestSign(t *testing.T) {
 
 		So(signedReq.Header.Get("Authorization"), ShouldStartWith, "AWS ")
 		So(signedReq.Header.Get("Authorization"), ShouldContainSubstring, ":")
+	})
+}
+
+func TestExpiration(t *testing.T) {
+	var c = &Credentials{}
+
+	Convey("Credentials without an expiration can't expire", t, func() {
+		So(c.expired(), ShouldBeFalse)
+	})
+
+	Convey("Credentials that expire in 5 minutes aren't expired", t, func() {
+		c.Expiration = time.Now().Add(5 * time.Minute)
+		So(c.expired(), ShouldBeFalse)
+	})
+
+	Convey("Credentials that expire in 1 minute are expired", t, func() {
+		c.Expiration = time.Now().Add(1 * time.Minute)
+		So(c.expired(), ShouldBeTrue)
+	})
+
+	Convey("Credentials that expired in 2 hours ago are expired", t, func() {
+		c.Expiration = time.Now().Add(-2 * time.Hour)
+		So(c.expired(), ShouldBeTrue)
 	})
 }
 
