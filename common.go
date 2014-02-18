@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -52,7 +53,7 @@ func checkKeys() {
 		}
 	}
 	// if accesskey and the secretkey are blank, get the key from the role
-	if Keys.AccessKeyID == "" {
+	if Keys.AccessKeyID == "" && onEC2() {
 
 		Keys = getIAMRoleCredentials()
 	}
@@ -60,6 +61,18 @@ func checkKeys() {
 	// if the expiration is set and it's less than 5 minutes in the future, get a new key
 	if Keys.expired() {
 		Keys = getIAMRoleCredentials()
+	}
+}
+
+func onEC2() bool {
+
+	c, err := net.DialTimeout("tcp", "169.254.169.254:80", time.Second)
+
+	if err != nil {
+		return false
+	} else {
+		c.Close()
+		return true
 	}
 }
 
