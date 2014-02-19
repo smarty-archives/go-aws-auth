@@ -11,7 +11,6 @@ import (
 // Keys stores the authentication credentials to be used when signing requests.
 // You can set them manually or leave it to awsauth to use environment variables.
 var Keys *Credentials
-var emptyTime time.Time
 
 type Credentials struct {
 	AccessKeyID     string
@@ -26,7 +25,7 @@ type Credentials struct {
 // that do not have an Expiration cannot expire.
 func (k *Credentials) expired() bool {
 
-	if k.Expiration == emptyTime {
+	if k.Expiration.IsZero() {
 		// Credentials with no expiration can't expire
 		return false
 	}
