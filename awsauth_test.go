@@ -1,13 +1,13 @@
 package awsauth
 
 import (
+	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 	"testing"
 	"time"
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestIntegration(t *testing.T) {
