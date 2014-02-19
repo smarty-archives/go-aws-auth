@@ -79,7 +79,6 @@ func onEC2() bool {
 		loc = &location{}
 	}
 	if !(loc.checked) {
-		fmt.Println("Checking location...")
 		c, err := net.DialTimeout("tcp", "169.254.169.254:80", time.Second)
 
 		if err != nil {
