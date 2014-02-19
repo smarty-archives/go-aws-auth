@@ -1,13 +1,13 @@
 package awsauth
 
 import (
+	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 	"testing"
 	"time"
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestIntegration(t *testing.T) {
@@ -15,7 +15,7 @@ func TestIntegration(t *testing.T) {
 		Convey("A request (with out-of-order query string) with to IAM should succeed (assuming Administrator Access policy)", func() {
 			req := newRequest("GET", "https://iam.amazonaws.com/?Version=2010-05-08&Action=ListRoles", nil)
 
-			if !envCredentialsSet() {
+			if !credentialsSet() {
 				SkipSo(http.StatusOK, ShouldEqual, http.StatusOK)
 			} else {
 				resp := sign4AndDo(req)
@@ -26,7 +26,7 @@ func TestIntegration(t *testing.T) {
 		Convey("A request to S3 should succeed", func() {
 			req, _ := http.NewRequest("GET", "https://s3.amazonaws.com", nil)
 
-			if !envCredentialsSet() {
+			if !credentialsSet() {
 				SkipSo(http.StatusOK, ShouldEqual, http.StatusOK)
 			} else {
 				resp := signS3AndDo(req)
@@ -39,7 +39,7 @@ func TestIntegration(t *testing.T) {
 				"Action": []string{"DescribeInstances"},
 			})
 
-			if !envCredentialsSet() {
+			if !credentialsSet() {
 				SkipSo(http.StatusOK, ShouldEqual, http.StatusOK)
 			} else {
 				resp := sign2AndDo(req)
@@ -52,7 +52,7 @@ func TestIntegration(t *testing.T) {
 				"Action": []string{"ListQueues"},
 			})
 
-			if !envCredentialsSet() {
+			if !credentialsSet() {
 				SkipSo(http.StatusOK, ShouldEqual, http.StatusOK)
 			} else {
 				resp := sign4AndDo(req)
@@ -63,7 +63,7 @@ func TestIntegration(t *testing.T) {
 		Convey("A request to SES should succeed", func() {
 			req := newRequest("GET", "https://email.us-east-1.amazonaws.com/?Action=GetSendStatistics", nil)
 
-			if !envCredentialsSet() {
+			if !credentialsSet() {
 				SkipSo(http.StatusOK, ShouldEqual, http.StatusOK)
 			} else {
 				resp := sign3AndDo(req)
@@ -74,7 +74,7 @@ func TestIntegration(t *testing.T) {
 		Convey("A request to Route 53 should succeed", func() {
 			req := newRequest("GET", "https://route53.amazonaws.com/2013-04-01/hostedzone?maxitems=1", nil)
 
-			if !envCredentialsSet() {
+			if !credentialsSet() {
 				SkipSo(http.StatusOK, ShouldEqual, http.StatusOK)
 			} else {
 				resp := sign3AndDo(req)
@@ -85,7 +85,7 @@ func TestIntegration(t *testing.T) {
 		Convey("A request to SimpleDB should succeed", func() {
 			req := newRequest("GET", "https://sdb.amazonaws.com/?Action=ListDomains&Version=2009-04-15", nil)
 
-			if !envCredentialsSet() {
+			if !credentialsSet() {
 				SkipSo(http.StatusOK, ShouldEqual, http.StatusOK)
 			} else {
 				resp := sign2AndDo(req)
@@ -99,7 +99,7 @@ func TestIntegration(t *testing.T) {
 			Convey("A URL-signed request to that S3 resource should succeed", func() {
 				req, _ := http.NewRequest("GET", s3res, nil)
 
-				if !envCredentialsSet() || s3res == "" {
+				if !credentialsSet() || s3res == "" {
 					SkipSo(http.StatusOK, ShouldEqual, http.StatusOK)
 				} else {
 					resp := signS3UrlAndDo(req)
@@ -153,8 +153,36 @@ func TestSign(t *testing.T) {
 	})
 }
 
-func envCredentialsSet() bool {
-	return os.Getenv(envAccessKeyID) != "" && os.Getenv(envSecretAccessKey) != ""
+func TestExpiration(t *testing.T) {
+	var c = &Credentials{}
+
+	Convey("Credentials without an expiration can't expire", t, func() {
+		So(c.expired(), ShouldBeFalse)
+	})
+
+	Convey("Credentials that expire in 5 minutes aren't expired", t, func() {
+		c.Expiration = time.Now().Add(5 * time.Minute)
+		So(c.expired(), ShouldBeFalse)
+	})
+
+	Convey("Credentials that expire in 1 minute are expired", t, func() {
+		c.Expiration = time.Now().Add(1 * time.Minute)
+		So(c.expired(), ShouldBeTrue)
+	})
+
+	Convey("Credentials that expired 2 hours ago are expired", t, func() {
+		c.Expiration = time.Now().Add(-2 * time.Hour)
+		So(c.expired(), ShouldBeTrue)
+	})
+}
+
+func credentialsSet() bool {
+	checkKeys()
+	if Keys.AccessKeyID == "" {
+		return false
+	} else {
+		return true
+	}
 }
 
 func newRequest(method string, url string, v url.Values) *http.Request {

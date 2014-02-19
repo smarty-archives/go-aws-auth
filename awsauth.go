@@ -15,7 +15,29 @@ var Keys *Credentials
 type Credentials struct {
 	AccessKeyID     string
 	SecretAccessKey string
-	SecurityToken   string
+	SecurityToken   string `json:"Token"`
+	Expiration      time.Time
+}
+
+// expired checks to see if the temporary credentials from an IAM role are
+// within 4 minutes of expiration (The IAM documentation says that new keys
+// will be provisioned 5 minutes before the old keys expire). Credentials
+// that do not have an Expiration cannot expire.
+func (k *Credentials) expired() bool {
+
+	if k.Expiration.IsZero() {
+		// Credentials with no expiration can't expire
+		return false
+	}
+
+	expireTime := k.Expiration.Add(-4 * time.Minute)
+	// if t - 4 mins is before now, true
+	if expireTime.Before(time.Now()) {
+		return true
+	} else {
+		return false
+	}
+
 }
 
 // Sign signs a request bound for AWS. It automatically chooses the best

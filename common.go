@@ -1,20 +1,30 @@
 package awsauth
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/hmac"
 	"crypto/md5"
 	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 	"time"
 )
+
+type location struct {
+	ec2     bool
+	checked bool
+}
+
+var loc *location
 
 func serviceAndRegion(host string) (string, string) {
 	var region, service string
@@ -44,11 +54,117 @@ func serviceAndRegion(host string) (string, string) {
 func checkKeys() {
 	if Keys == nil {
 		Keys = &Credentials{
-			os.Getenv(envAccessKeyID),
-			os.Getenv(envSecretAccessKey),
-			os.Getenv(envSecurityToken),
+			AccessKeyID:     os.Getenv(envAccessKeyID),
+			SecretAccessKey: os.Getenv(envSecretAccessKey),
+			SecurityToken:   os.Getenv(envSecurityToken),
 		}
 	}
+
+	// If there is no Access Key and you are on EC2, get the key from the role
+	if Keys.AccessKeyID == "" && onEC2() {
+		Keys = getIAMRoleCredentials()
+	}
+
+	// If the key is expiring, get a new key
+	if Keys.expired() && onEC2() {
+		Keys = getIAMRoleCredentials()
+	}
+}
+
+// onEC2 checks to see if the program is running on an EC2 instance.
+// It does this by looking for the EC2 metadata service.
+// This caches that information in a struct so that it doesn't waste time.
+func onEC2() bool {
+	if loc == nil {
+		loc = &location{}
+	}
+	if !(loc.checked) {
+		c, err := net.DialTimeout("tcp", "169.254.169.254:80", time.Second)
+
+		if err != nil {
+			loc.ec2 = false
+		} else {
+			c.Close()
+			loc.ec2 = true
+		}
+		loc.checked = true
+	}
+
+	return loc.ec2
+}
+
+// getIAMRoleList gets a list of the roles that are available to this instance
+func getIAMRoleList() []string {
+
+	var roles []string
+	url := "http://169.254.169.254/latest/meta-data/iam/security-credentials/"
+
+	client := &http.Client{}
+
+	req, err := http.NewRequest("GET", url, nil)
+
+	if err != nil {
+		return roles
+	}
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return roles
+	}
+
+	scanner := bufio.NewScanner(resp.Body)
+	for scanner.Scan() {
+		roles = append(roles, scanner.Text())
+	}
+	return roles
+}
+
+func getIAMRoleCredentials() *Credentials {
+
+	roles := getIAMRoleList()
+
+	if len(roles) < 1 {
+		return &Credentials{}
+	}
+
+	// Use the first role in the list
+	role := roles[0]
+
+	url := "http://169.254.169.254/latest/meta-data/iam/security-credentials/"
+
+	// Create the full URL of the role
+	var buffer bytes.Buffer
+	buffer.WriteString(url)
+	buffer.WriteString(role)
+	roleurl := buffer.String()
+
+	// Get the role
+	rolereq, err := http.NewRequest("GET", roleurl, nil)
+
+	if err != nil {
+		return &Credentials{}
+	}
+
+	roleresp, err := client.Do(rolereq)
+
+	if err != nil {
+		return &Credentials{}
+	}
+
+	rolebuf := new(bytes.Buffer)
+	rolebuf.ReadFrom(roleresp.Body)
+
+	creds := Credentials{}
+
+	err = json.Unmarshal(rolebuf.Bytes(), &creds)
+
+	if err != nil {
+		return &Credentials{}
+	}
+
+	return &creds
+
 }
 
 func augmentRequestQuery(req *http.Request, values url.Values) *http.Request {
