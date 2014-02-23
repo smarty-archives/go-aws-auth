@@ -146,6 +146,7 @@ func getIAMRoleCredentials() *Credentials {
 		return &Credentials{}
 	}
 
+	client := &http.Client{}
 	roleresp, err := client.Do(rolereq)
 
 	if err != nil {
