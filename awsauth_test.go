@@ -1,13 +1,13 @@
 package awsauth
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 	"testing"
 	"time"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestIntegration(t *testing.T) {
@@ -35,9 +35,7 @@ func TestIntegration(t *testing.T) {
 		})
 
 		Convey("A request to EC2 should succeed", func() {
-			req := newRequest("GET", "https://ec2.amazonaws.com", url.Values{
-				"Action": []string{"DescribeInstances"},
-			})
+			req := newRequest("GET", "https://ec2.amazonaws.com/?Version=2013-10-15&Action=DescribeInstances", nil)
 
 			if !credentialsSet() {
 				SkipSo(http.StatusOK, ShouldEqual, http.StatusOK)
