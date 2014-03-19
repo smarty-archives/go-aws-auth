@@ -1,11 +1,11 @@
 package awsauth
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/url"
 	"strings"
 	"testing"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestVersion4RequestPreparer(t *testing.T) {
@@ -195,9 +195,9 @@ var (
 	}
 
 	expectingV4 = map[string]string{
-		"CanonicalHash": "3511de7e95d28ecd39e9513b642aee07e54f4941150d8df8bf94b328ef7e55e2",
-		"StringToSign":  "AWS4-HMAC-SHA256\n20110909T233600Z\n20110909/us-east-1/iam/aws4_request\n3511de7e95d28ecd39e9513b642aee07e54f4941150d8df8bf94b328ef7e55e2",
-		"SignatureV4":   "ced6826de92d2bdeed8f846f0bf508e8559e98e4b0199114b84c54174deb456c",
+		"CanonicalHash": "6bb0c1d1a458667c2717e3b2f7b14033f757a8e7230013d40b1e4d18b2378fe4",
+		"StringToSign":  "AWS4-HMAC-SHA256\n20110909T233600Z\n20110909/us-east-1/iam/aws4_request\n6bb0c1d1a458667c2717e3b2f7b14033f757a8e7230013d40b1e4d18b2378fe4",
+		"SignatureV4":   "2f5b7bfe9c47bbf5fff60c6d667e1439f64a29f3f194fa02d83facf42843fa8d",
 		"AuthHeader":    "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/iam/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=",
 	}
 

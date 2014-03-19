@@ -9,14 +9,16 @@ func hashedCanonicalRequestV4(req *http.Request, meta *metadata) string {
 	// TASK 1. http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
 
 	payload := readAndReplaceBody(req)
-	hashedPayload := hashSHA256(payload)
+	payloadHash := hashSHA256(payload)
+
+	req.Header.Set("X-Amz-Content-Sha256", payloadHash)
 
 	contentType := req.Header.Get("Content-Type")
 	reqTs := req.Header.Get("X-Amz-Date")
-	headersToSign := concat("\n", "content-type:"+contentType, "host:"+req.Host, "x-amz-date:"+reqTs) + "\n"
-	meta.signedHeaders = "content-type;host;x-amz-date"
+	headersToSign := concat("\n", "content-type:"+contentType, "host:"+req.Host, "x-amz-content-sha256:"+payloadHash, "x-amz-date:"+reqTs) + "\n"
+	meta.signedHeaders = "content-type;host;x-amz-content-sha256;x-amz-date"
 
-	canonicalRequest := concat("\n", req.Method, req.URL.Path, req.URL.Query().Encode(), headersToSign, meta.signedHeaders, hashedPayload)
+	canonicalRequest := concat("\n", req.Method, req.URL.Path, req.URL.Query().Encode(), headersToSign, meta.signedHeaders, payloadHash)
 	return hashSHA256([]byte(canonicalRequest))
 }
 

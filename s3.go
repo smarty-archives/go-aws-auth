@@ -95,6 +95,7 @@ func prepareRequestS3(req *http.Request) *http.Request {
 	return req
 }
 
+// Info: http://docs.aws.amazon.com/AmazonS3/latest/dev/VirtualHosting.html
 func isS3VirtualHostedStyle(req *http.Request) bool {
 	service, _ := serviceAndRegion(req.Host)
 	return service == "s3" && strings.Count(req.Host, ".") == 3

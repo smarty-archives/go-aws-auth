@@ -211,11 +211,11 @@ var awsSignVersion = map[string]int{
 	"sdb":                  2,
 	"sns":                  4,
 	"sqs":                  4,
-	"s3":                   -1, // custom
+	"s3":                   4,
 	"elasticbeanstalk":     4,
 	"importexport":         2,
 	"iam":                  4,
 	"route53":              3,
 	"elasticloadbalancing": 4,
-	"email":                3, // Simple Email Service (SES)
+	"email":                3,
 }

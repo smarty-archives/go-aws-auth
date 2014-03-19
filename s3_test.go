@@ -1,14 +1,16 @@
 package awsauth
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"testing"
 	"time"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestSignatureS3(t *testing.T) {
 	// http://docs.aws.amazon.com/AmazonS3/2006-03-01/dev/RESTAuthentication.html
+	// Note: S3 now supports signed signature version 4
+	// (but signed URL requests still utilize a lot of the same functionality)
 
 	Convey("Given a GET request to Amazon S3", t, func() {
 		Keys = testCredS3
@@ -65,6 +67,11 @@ func TestSignatureS3(t *testing.T) {
 			actual := signatureS3(expectedStringToSignS3Url)
 			So(actual, ShouldEqual, "R2K/+9bbnBIbVDCs7dqlz3XFtBQ=")
 		})
+
+		Convey("The finished signed URL should be correct", func() {
+			expiry := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
+			So(SignS3Url(req, expiry).URL.String(), ShouldEqual, expectedSignedS3Url)
+		})
 	})
 }
 
@@ -116,5 +123,6 @@ var (
 	expectedCanonResourceS3   = "/johnsmith/photos/puppy.jpg"
 	expectedStringToSignS3    = "GET\n\n\nTue, 27 Mar 2007 19:36:42 +0000\n/johnsmith/photos/puppy.jpg"
 	expectedStringToSignS3Url = "GET\n\n\n1175024202\n/johnsmith/photos/puppy.jpg"
+	expectedSignedS3Url       = "https://johnsmith.s3.amazonaws.com/johnsmith/photos/puppy.jpg?AWSAccessKeyId=AKIAIOSFODNN7EXAMPLE&Expires=1257894000&Signature=X%2FarTLAJP08uP1Bsap52rwmsVok%3D"
 	exampleReqTsS3            = "Tue, 27 Mar 2007 19:36:42 +0000"
 )

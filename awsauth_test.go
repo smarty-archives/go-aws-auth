@@ -1,6 +1,7 @@
 package awsauth
 
 import (
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -19,6 +20,10 @@ func TestIntegration(t *testing.T) {
 				SkipSo(http.StatusOK, ShouldEqual, http.StatusOK)
 			} else {
 				resp := sign4AndDo(req)
+				if resp.StatusCode != http.StatusOK {
+					msg, _ := ioutil.ReadAll(resp.Body)
+					t.Error(string(msg))
+				}
 				So(resp.StatusCode, ShouldEqual, http.StatusOK)
 			}
 		})
@@ -29,7 +34,11 @@ func TestIntegration(t *testing.T) {
 			if !credentialsSet() {
 				SkipSo(http.StatusOK, ShouldEqual, http.StatusOK)
 			} else {
-				resp := signS3AndDo(req)
+				resp := sign4AndDo(req)
+				if resp.StatusCode != http.StatusOK {
+					msg, _ := ioutil.ReadAll(resp.Body)
+					t.Error(string(msg))
+				}
 				So(resp.StatusCode, ShouldEqual, http.StatusOK)
 			}
 		})
@@ -41,6 +50,10 @@ func TestIntegration(t *testing.T) {
 				SkipSo(http.StatusOK, ShouldEqual, http.StatusOK)
 			} else {
 				resp := sign2AndDo(req)
+				if resp.StatusCode != http.StatusOK {
+					msg, _ := ioutil.ReadAll(resp.Body)
+					t.Error(string(msg))
+				}
 				So(resp.StatusCode, ShouldEqual, http.StatusOK)
 			}
 		})
@@ -54,6 +67,10 @@ func TestIntegration(t *testing.T) {
 				SkipSo(http.StatusOK, ShouldEqual, http.StatusOK)
 			} else {
 				resp := sign4AndDo(req)
+				if resp.StatusCode != http.StatusOK {
+					msg, _ := ioutil.ReadAll(resp.Body)
+					t.Error(string(msg))
+				}
 				So(resp.StatusCode, ShouldEqual, http.StatusOK)
 			}
 		})
@@ -65,6 +82,10 @@ func TestIntegration(t *testing.T) {
 				SkipSo(http.StatusOK, ShouldEqual, http.StatusOK)
 			} else {
 				resp := sign3AndDo(req)
+				if resp.StatusCode != http.StatusOK {
+					msg, _ := ioutil.ReadAll(resp.Body)
+					t.Error(string(msg))
+				}
 				So(resp.StatusCode, ShouldEqual, http.StatusOK)
 			}
 		})
@@ -76,6 +97,10 @@ func TestIntegration(t *testing.T) {
 				SkipSo(http.StatusOK, ShouldEqual, http.StatusOK)
 			} else {
 				resp := sign3AndDo(req)
+				if resp.StatusCode != http.StatusOK {
+					msg, _ := ioutil.ReadAll(resp.Body)
+					t.Error(string(msg))
+				}
 				So(resp.StatusCode, ShouldEqual, http.StatusOK)
 			}
 		})
@@ -87,6 +112,10 @@ func TestIntegration(t *testing.T) {
 				SkipSo(http.StatusOK, ShouldEqual, http.StatusOK)
 			} else {
 				resp := sign2AndDo(req)
+				if resp.StatusCode != http.StatusOK {
+					msg, _ := ioutil.ReadAll(resp.Body)
+					t.Error(string(msg))
+				}
 				So(resp.StatusCode, ShouldEqual, http.StatusOK)
 			}
 		})
@@ -101,6 +130,10 @@ func TestIntegration(t *testing.T) {
 					SkipSo(http.StatusOK, ShouldEqual, http.StatusOK)
 				} else {
 					resp := signS3UrlAndDo(req)
+					if resp.StatusCode != http.StatusOK {
+						msg, _ := ioutil.ReadAll(resp.Body)
+						t.Error(string(msg))
+					}
 					So(resp.StatusCode, ShouldEqual, http.StatusOK)
 				}
 			})
@@ -135,19 +168,12 @@ func TestSign(t *testing.T) {
 		reqs := []*http.Request{
 			newRequest("POST", "https://sqs.amazonaws.com/", url.Values{}),
 			newRequest("GET", "https://iam.amazonaws.com", url.Values{}),
+			newRequest("GET", "https://s3.amazonaws.com", url.Values{}),
 		}
 		for _, req := range reqs {
 			signedReq := Sign(req)
 			So(signedReq.Header.Get("Authorization"), ShouldContainSubstring, ", Signature=")
 		}
-	})
-
-	Convey("Requests to S3 should be signed accordingly", t, func() {
-		req := newRequest("GET", "https://johnsmith.s3.amazonaws.com", url.Values{})
-		signedReq := Sign(req)
-
-		So(signedReq.Header.Get("Authorization"), ShouldStartWith, "AWS ")
-		So(signedReq.Header.Get("Authorization"), ShouldContainSubstring, ":")
 	})
 }
 
