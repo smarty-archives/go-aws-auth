@@ -3,6 +3,8 @@ package awsauth
 import (
 	"encoding/hex"
 	"net/http"
+	"sort"
+	"strings"
 )
 
 func hashedCanonicalRequestV4(req *http.Request, meta *metadata) string {
@@ -10,15 +12,32 @@ func hashedCanonicalRequestV4(req *http.Request, meta *metadata) string {
 
 	payload := readAndReplaceBody(req)
 	payloadHash := hashSHA256(payload)
-
 	req.Header.Set("X-Amz-Content-Sha256", payloadHash)
 
-	contentType := req.Header.Get("Content-Type")
-	reqTs := req.Header.Get("X-Amz-Date")
-	headersToSign := concat("\n", "content-type:"+contentType, "host:"+req.Host, "x-amz-content-sha256:"+payloadHash, "x-amz-date:"+reqTs) + "\n"
-	meta.signedHeaders = "content-type;host;x-amz-content-sha256;x-amz-date"
+	// Set this in header values to make it appear in the range of headers to sign
+	req.Header.Set("Host", req.Host)
 
+	var sortedHeaderKeys []string
+	for key, _ := range req.Header {
+		switch key {
+		case "Content-Type", "Host":
+		default:
+			if !strings.HasPrefix(key, "X-Amz-") {
+				continue
+			}
+		}
+		sortedHeaderKeys = append(sortedHeaderKeys, strings.ToLower(key))
+	}
+	sort.Strings(sortedHeaderKeys)
+
+	var headersToSign string
+	for _, key := range sortedHeaderKeys {
+		value := strings.TrimSpace(req.Header.Get(key))
+		headersToSign += key + ":" + value + "\n"
+	}
+	meta.signedHeaders = concat(";", sortedHeaderKeys...)
 	canonicalRequest := concat("\n", req.Method, req.URL.Path, req.URL.Query().Encode(), headersToSign, meta.signedHeaders, payloadHash)
+
 	return hashSHA256([]byte(canonicalRequest))
 }
 

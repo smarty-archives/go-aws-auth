@@ -1,18 +1,18 @@
 package awsauth
 
 import (
+	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/url"
 	"strings"
 	"testing"
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestVersion4RequestPreparer(t *testing.T) {
 	Convey("Given a plain request with no custom headers", t, func() {
 		req := test_plainRequestV4(false)
 
-		expectedUnsigned := test_unsignedRequestV4(true)
+		expectedUnsigned := test_unsignedRequestV4(true, false)
 		expectedUnsigned.Header.Set("X-Amz-Date", timestampV4())
 
 		Convey("The necessary, default headers should be appended", func() {
@@ -43,9 +43,9 @@ func TestVersion4RequestPreparer(t *testing.T) {
 
 	Convey("Given a request with custom, necessary headers", t, func() {
 		Convey("The custom, necessary headers must not be changed", func() {
-			req := test_unsignedRequestV4(true)
+			req := test_unsignedRequestV4(true, false)
 			prepareRequestV4(req)
-			So(req, ShouldResemble, test_unsignedRequestV4(true))
+			So(req, ShouldResemble, test_unsignedRequestV4(true, false))
 		})
 	})
 }
@@ -73,8 +73,8 @@ func TestVersion4STSRequestPreparer(t *testing.T) {
 func TestVersion4SigningTasks(t *testing.T) {
 	// http://docs.aws.amazon.com/general/latest/gr/sigv4_signing.html
 
-	Convey("Given a bogus request and credentials from AWS documentation", t, func() {
-		req := test_unsignedRequestV4(true)
+	Convey("Given a bogus request and credentials from AWS documentation with an additional meta tag", t, func() {
+		req := test_unsignedRequestV4(true, true)
 		meta := new(metadata)
 
 		Convey("(Task 1) The canonical request should be built correctly", func() {
@@ -171,10 +171,13 @@ func test_plainRequestV4(trailingSlash bool) *http.Request {
 	return req
 }
 
-func test_unsignedRequestV4(trailingSlash bool) *http.Request {
+func test_unsignedRequestV4(trailingSlash, tag bool) *http.Request {
 	req := test_plainRequestV4(trailingSlash)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
 	req.Header.Set("X-Amz-Date", "20110909T233600Z")
+	if tag {
+		req.Header.Set("X-Amz-Meta-Foo", "Bar!")
+	}
 	return req
 }
 
@@ -195,9 +198,9 @@ var (
 	}
 
 	expectingV4 = map[string]string{
-		"CanonicalHash": "6bb0c1d1a458667c2717e3b2f7b14033f757a8e7230013d40b1e4d18b2378fe4",
-		"StringToSign":  "AWS4-HMAC-SHA256\n20110909T233600Z\n20110909/us-east-1/iam/aws4_request\n6bb0c1d1a458667c2717e3b2f7b14033f757a8e7230013d40b1e4d18b2378fe4",
-		"SignatureV4":   "2f5b7bfe9c47bbf5fff60c6d667e1439f64a29f3f194fa02d83facf42843fa8d",
+		"CanonicalHash": "41c56ed0df12052f7c10407a809e64cd61a4b0471956cdea28d6d1bb904f5d92",
+		"StringToSign":  "AWS4-HMAC-SHA256\n20110909T233600Z\n20110909/us-east-1/iam/aws4_request\n41c56ed0df12052f7c10407a809e64cd61a4b0471956cdea28d6d1bb904f5d92",
+		"SignatureV4":   "08292a4b86aae1a6f80f1988182a33cbf73ccc70c5da505303e355a67cc64cb4",
 		"AuthHeader":    "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/iam/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=",
 	}
 
