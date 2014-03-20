@@ -7,25 +7,29 @@ import (
 
 func TestCommonFunctions(t *testing.T) {
 	Convey("Service and region should be properly extracted from host strings", t, func() {
-		s1, r1 := serviceAndRegion("sqs.us-west-2.amazonaws.com")
-		So(s1, ShouldEqual, "sqs")
-		So(r1, ShouldEqual, "us-west-2")
+		service, region := serviceAndRegion("sqs.us-west-2.amazonaws.com")
+		So(service, ShouldEqual, "sqs")
+		So(region, ShouldEqual, "us-west-2")
 
-		s2, r2 := serviceAndRegion("iam.amazonaws.com")
-		So(s2, ShouldEqual, "iam")
-		So(r2, ShouldEqual, "us-east-1")
+		service, region = serviceAndRegion("iam.amazonaws.com")
+		So(service, ShouldEqual, "iam")
+		So(region, ShouldEqual, "us-east-1")
 
-		s3, r3 := serviceAndRegion("bucketname.s3.amazonaws.com")
-		So(s3, ShouldEqual, "s3")
-		So(r3, ShouldEqual, "bucketname")
+		service, region = serviceAndRegion("sns.us-west-2.amazonaws.com")
+		So(service, ShouldEqual, "sns")
+		So(region, ShouldEqual, "us-west-2")
 
-		s4, r4 := serviceAndRegion("s3.amazonaws.com")
-		So(s4, ShouldEqual, "s3")
-		So(r4, ShouldEqual, "us-east-1")
+		service, region = serviceAndRegion("bucketname.s3.amazonaws.com")
+		So(service, ShouldEqual, "s3")
+		So(region, ShouldEqual, "us-east-1")
 
-		s5, r5 := serviceAndRegion("s3-us-west-1.amazonaws.com")
-		So(s5, ShouldEqual, "s3")
-		So(r5, ShouldEqual, "us-west-1")
+		service, region = serviceAndRegion("s3.amazonaws.com")
+		So(service, ShouldEqual, "s3")
+		So(region, ShouldEqual, "us-east-1")
+
+		service, region = serviceAndRegion("s3-us-west-1.amazonaws.com")
+		So(service, ShouldEqual, "s3")
+		So(region, ShouldEqual, "us-west-1")
 	})
 
 	Convey("MD5 hashes should be properly computed and base-64 encoded", t, func() {

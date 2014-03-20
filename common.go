@@ -26,29 +26,35 @@ type location struct {
 
 var loc *location
 
-func serviceAndRegion(host string) (string, string) {
-	var region, service string
+// serviceAndRegion parsers a hostname to find out which ones it is.
+// http://docs.aws.amazon.com/general/latest/gr/rande.html
+func serviceAndRegion(host string) (service string, region string) {
+	// These are the defaults if the hostname doesn't suggest something else
+	region = "us-east-1"
+	service = "s3"
+
 	parts := strings.Split(host, ".")
-
-	service = parts[0]
-
-	if len(parts) >= 4 {
+	if len(parts) == 4 {
+		// Either service.region.amazonaws.com or virtual-host.region.amazonaws.com
 		if parts[1] == "s3" {
-			region = parts[0]
-			service = parts[1]
+			service = "s3"
+		} else if strings.HasPrefix(parts[1], "s3-") {
+			region = region[3:]
+			service = "s3"
 		} else {
+			service = parts[0]
 			region = parts[1]
 		}
 	} else {
+		// Either service.amazonaws.com or s3-region.amazonaws.com
 		if strings.HasPrefix(parts[0], "s3-") {
-			service = parts[0][:2]
 			region = parts[0][3:]
 		} else {
-			region = "us-east-1" // default. http://docs.aws.amazon.com/general/latest/gr/rande.html
+			service = parts[0]
 		}
 	}
 
-	return service, region
+	return
 }
 
 func checkKeys() {
