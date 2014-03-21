@@ -72,7 +72,7 @@ func canonicalResourceS3(req *http.Request) string {
 	res := ""
 
 	if isS3VirtualHostedStyle(req) {
-		_, bucketname := serviceAndRegion(req.Host)
+		bucketname := strings.Split(req.Host, ".")[0]
 		res += "/" + bucketname
 	}
 
