@@ -118,6 +118,7 @@ func getIAMRoleList() []string {
 	if err != nil {
 		return roles
 	}
+	defer resp.Body.Close()
 
 	scanner := bufio.NewScanner(resp.Body)
 	for scanner.Scan() {
@@ -158,6 +159,7 @@ func getIAMRoleCredentials() *Credentials {
 	if err != nil {
 		return &Credentials{}
 	}
+	defer roleresp.Body.Close()
 
 	rolebuf := new(bytes.Buffer)
 	rolebuf.ReadFrom(roleresp.Body)
