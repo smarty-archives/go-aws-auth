@@ -1,10 +1,11 @@
 // Package awsauth implements AWS request signing using Signed Signature Version 2,
-// Signed Signature Version 4, and the S3 Custom HTTP Authentication Scheme.
+// Signed Signature Version 3, and Signed Signature Version 4. Supports S3 and STS.
 package awsauth
 
 import (
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 )
 
@@ -12,32 +13,13 @@ import (
 // You can set them manually or leave it to awsauth to use environment variables.
 var Keys *Credentials
 
+// Credentials stores the information necessary to authorize with AWS and it
+// is from this information that requests are signed.
 type Credentials struct {
 	AccessKeyID     string
 	SecretAccessKey string
 	SecurityToken   string `json:"Token"`
 	Expiration      time.Time
-}
-
-// expired checks to see if the temporary credentials from an IAM role are
-// within 4 minutes of expiration (The IAM documentation says that new keys
-// will be provisioned 5 minutes before the old keys expire). Credentials
-// that do not have an Expiration cannot expire.
-func (k *Credentials) expired() bool {
-
-	if k.Expiration.IsZero() {
-		// Credentials with no expiration can't expire
-		return false
-	}
-
-	expireTime := k.Expiration.Add(-4 * time.Minute)
-	// if t - 4 mins is before now, true
-	if expireTime.Before(time.Now()) {
-		return true
-	} else {
-		return false
-	}
-
 }
 
 // Sign signs a request bound for AWS. It automatically chooses the best
@@ -62,6 +44,8 @@ func Sign(req *http.Request) *http.Request {
 
 // Sign4 signs a request with Signed Signature Version 4.
 func Sign4(req *http.Request) *http.Request {
+	signMutex.Lock()
+	defer signMutex.Unlock()
 	checkKeys()
 
 	// Add the X-Amz-Security-Token header when using STS
@@ -90,6 +74,8 @@ func Sign4(req *http.Request) *http.Request {
 // Sign3 signs a request with Signed Signature Version 3.
 // If the service you're accessing supports Version 4, use that instead.
 func Sign3(req *http.Request) *http.Request {
+	signMutex.Lock()
+	defer signMutex.Unlock()
 	checkKeys()
 
 	// Add the X-Amz-Security-Token header when using STS
@@ -114,6 +100,8 @@ func Sign3(req *http.Request) *http.Request {
 // Sign2 signs a request with Signed Signature Version 2.
 // If the service you're accessing supports Version 4, use that instead.
 func Sign2(req *http.Request) *http.Request {
+	signMutex.Lock()
+	defer signMutex.Unlock()
 	checkKeys()
 
 	// Add the SecurityToken parameter when using STS
@@ -141,6 +129,8 @@ func Sign2(req *http.Request) *http.Request {
 // SignS3 signs a request bound for Amazon S3 using their custom
 // HTTP authentication scheme.
 func SignS3(req *http.Request) *http.Request {
+	signMutex.Lock()
+	defer signMutex.Unlock()
 	checkKeys()
 
 	// Add the X-Amz-Security-Token header when using STS
@@ -164,6 +154,8 @@ func SignS3(req *http.Request) *http.Request {
 // specify an expiration date for these signed requests. After that date,
 // a request signed with this method will be rejected by S3.
 func SignS3Url(req *http.Request, expire time.Time) *http.Request {
+	signMutex.Lock()
+	defer signMutex.Unlock()
 	checkKeys()
 
 	stringToSign := stringToSignS3Url("GET", expire, req.URL.Path)
@@ -176,6 +168,24 @@ func SignS3Url(req *http.Request, expire time.Time) *http.Request {
 	req.URL.RawQuery = qs.Encode()
 
 	return req
+}
+
+// expired checks to see if the temporary credentials from an IAM role are
+// within 4 minutes of expiration (The IAM documentation says that new keys
+// will be provisioned 5 minutes before the old keys expire). Credentials
+// that do not have an Expiration cannot expire.
+func (k *Credentials) expired() bool {
+	if k.Expiration.IsZero() {
+		// Credentials with no expiration can't expire
+		return false
+	}
+	expireTime := k.Expiration.Add(-4 * time.Minute)
+	// if t - 4 mins is before now, true
+	if expireTime.Before(time.Now()) {
+		return true
+	} else {
+		return false
+	}
 }
 
 type metadata struct {
@@ -193,29 +203,33 @@ const (
 	envSecurityToken   = "AWS_SECURITY_TOKEN"
 )
 
-var awsSignVersion = map[string]int{
-	"autoscaling":          4,
-	"cloudfront":           4,
-	"cloudformation":       4,
-	"cloudsearch":          4,
-	"monitoring":           4,
-	"dynamodb":             4,
-	"ec2":                  2,
-	"elasticmapreduce":     4,
-	"elastictranscoder":    4,
-	"elasticache":          2,
-	"glacier":              4,
-	"kinesis":              4,
-	"redshift":             4,
-	"rds":                  4,
-	"sdb":                  2,
-	"sns":                  4,
-	"sqs":                  4,
-	"s3":                   4,
-	"elasticbeanstalk":     4,
-	"importexport":         2,
-	"iam":                  4,
-	"route53":              3,
-	"elasticloadbalancing": 4,
-	"email":                3,
-}
+var (
+	awsSignVersion = map[string]int{
+		"autoscaling":          4,
+		"cloudfront":           4,
+		"cloudformation":       4,
+		"cloudsearch":          4,
+		"monitoring":           4,
+		"dynamodb":             4,
+		"ec2":                  2,
+		"elasticmapreduce":     4,
+		"elastictranscoder":    4,
+		"elasticache":          2,
+		"glacier":              4,
+		"kinesis":              4,
+		"redshift":             4,
+		"rds":                  4,
+		"sdb":                  2,
+		"sns":                  4,
+		"sqs":                  4,
+		"s3":                   4,
+		"elasticbeanstalk":     4,
+		"importexport":         2,
+		"iam":                  4,
+		"route53":              3,
+		"elasticloadbalancing": 4,
+		"email":                3,
+	}
+
+	signMutex sync.Mutex
+)
