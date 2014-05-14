@@ -61,7 +61,7 @@ Once your credentials are set up, just make the request, have it signed, and per
 
 ```go
 url := "https://iam.amazonaws.com/?Action=ListRoles&Version=2010-05-08"
-client := &http.Client{}
+client := new(http.Client)
 
 req, err := http.NewRequest("GET", url, nil)
 
@@ -73,4 +73,4 @@ resp, err := client.Do(req)
 
 ### Contributing
 
-This library is nearing feature-complete and should work well for most common AWS interactions. Please feel free to contribute by forking, opening issues, submitting pull requests, etc. Thanks to all contributors! Can't wait until we hit 1.0!
+Please feel free to contribute! Bug fixes are more than welcome any time, as long as tests assert correct behavior. If you'd like to change an existing implementation or see a new feature, open an issue first so we can discuss it. Thanks to all contributors!
