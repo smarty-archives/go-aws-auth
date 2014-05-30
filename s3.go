@@ -17,15 +17,25 @@ func signatureS3(stringToSign string) string {
 func stringToSignS3(req *http.Request) string {
 	str := req.Method + "\n"
 
-	body := readAndReplaceBody(req)
-	if len(body) > 0 {
-		str += hashMD5(body)
+	if req.Header.Get("Content-Md5") != "" {
+		str += req.Header.Get("Content-Md5")
+	} else {
+		body := readAndReplaceBody(req)
+		if len(body) > 0 {
+			str += hashMD5(body)
+		}
 	}
 	str += "\n"
 
 	str += req.Header.Get("Content-Type") + "\n"
 
-	str += timestampS3() + "\n"
+	if req.Header.Get("Date") != "" {
+		str += req.Header.Get("Date")
+	} else {
+		str += timestampS3()
+	}
+
+	str += "\n"
 
 	canonicalHeaders := canonicalAmzHeadersS3(req)
 	if canonicalHeaders != "" {

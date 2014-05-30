@@ -1,7 +1,9 @@
 package awsauth
 
 import (
+	"fmt"
 	"net/http"
+	"net/url"
 	"testing"
 	"time"
 	. "github.com/smartystreets/goconvey/convey"
@@ -105,6 +107,28 @@ func test_headerRequestS3() *http.Request {
 	req.Header.Set("X-Amz-Date", "foobar")
 	req.Header.Set("X-Foobar", "nanoo-nanoo")
 	return req
+}
+
+func TestCanonical(t *testing.T) {
+	expectedCanonicalString := "PUT\nc8fdb181845a4ca6b8fec737b3581d76\ntext/html\nThu, 17 Nov 2005 18:49:58 GMT\nx-amz-magic:abracadabra\nx-amz-meta-author:foo@bar.com\n/quotes/nelson"
+
+	origUrl := "https://s3.amazonaws.com/"
+	resource := "/quotes/nelson"
+
+	u, _ := url.ParseRequestURI(origUrl)
+	u.Path = resource
+	urlStr := fmt.Sprintf("%v", u)
+
+	req, _ := http.NewRequest("PUT", urlStr, nil)
+	req.Header.Add("Content-Md5", "c8fdb181845a4ca6b8fec737b3581d76")
+	req.Header.Add("Content-Type", "text/html")
+	req.Header.Add("Date", "Thu, 17 Nov 2005 18:49:58 GMT")
+	req.Header.Add("X-Amz-Meta-Author", "foo@bar.com")
+	req.Header.Add("X-Amz-Magic", "abracadabra")
+
+	if stringToSignS3(req) != expectedCanonicalString {
+		t.Errorf("----Got\n***%s***\n----Expected\n***%s***", stringToSignS3(req), expectedCanonicalString)
+	}
 }
 
 var (
