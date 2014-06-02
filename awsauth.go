@@ -59,7 +59,7 @@ func Sign(req *http.Request, cred ...Credentials) *http.Request {
 func Sign4(req *http.Request, cred ...Credentials) *http.Request {
 	signMutex.Lock()
 	defer signMutex.Unlock()
-	if cred == nil {
+	if len(cred) == 0 {
 		checkKeys()
 	} else {
 		Keys = &cred[0]
@@ -93,7 +93,7 @@ func Sign4(req *http.Request, cred ...Credentials) *http.Request {
 func Sign3(req *http.Request, cred ...Credentials) *http.Request {
 	signMutex.Lock()
 	defer signMutex.Unlock()
-	if cred == nil {
+	if len(cred) == 0 {
 		checkKeys()
 	} else {
 		Keys = &cred[0]
@@ -123,7 +123,7 @@ func Sign3(req *http.Request, cred ...Credentials) *http.Request {
 func Sign2(req *http.Request, cred ...Credentials) *http.Request {
 	signMutex.Lock()
 	defer signMutex.Unlock()
-	if cred == nil {
+	if len(cred) == 0 {
 		checkKeys()
 	} else {
 		Keys = &cred[0]
@@ -156,7 +156,7 @@ func Sign2(req *http.Request, cred ...Credentials) *http.Request {
 func SignS3(req *http.Request, cred ...Credentials) *http.Request {
 	signMutex.Lock()
 	defer signMutex.Unlock()
-	if cred == nil {
+	if len(cred) == 0 {
 		checkKeys()
 	} else {
 		Keys = &cred[0]
@@ -185,7 +185,7 @@ func SignS3(req *http.Request, cred ...Credentials) *http.Request {
 func SignS3Url(req *http.Request, expire time.Time, cred ...Credentials) *http.Request {
 	signMutex.Lock()
 	defer signMutex.Unlock()
-	if cred == nil {
+	if len(cred) == 0 {
 		checkKeys()
 	} else {
 		Keys = &cred[0]
