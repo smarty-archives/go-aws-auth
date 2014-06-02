@@ -24,29 +24,46 @@ type Credentials struct {
 
 // Sign signs a request bound for AWS. It automatically chooses the best
 // authentication scheme based on the service the request is going to.
-func Sign(req *http.Request) *http.Request {
+func Sign(req *http.Request, cred ...Credentials) *http.Request {
 	service, _ := serviceAndRegion(req.URL.Host)
 	sigVersion := awsSignVersion[service]
 
-	switch sigVersion {
-	case 2:
-		return Sign2(req)
-	case 3:
-		return Sign3(req)
-	case 4:
-		return Sign4(req)
-	case -1:
-		return SignS3(req)
+	if len(cred) == 0 {
+		switch sigVersion {
+		case 2:
+			return Sign2(req)
+		case 3:
+			return Sign3(req)
+		case 4:
+			return Sign4(req)
+		case -1:
+			return SignS3(req)
+		}
+	} else {
+		switch sigVersion {
+		case 2:
+			return Sign2(req, cred[0])
+		case 3:
+			return Sign3(req, cred[0])
+		case 4:
+			return Sign4(req, cred[0])
+		case -1:
+			return SignS3(req, cred[0])
+		}
 	}
 
 	return nil
 }
 
 // Sign4 signs a request with Signed Signature Version 4.
-func Sign4(req *http.Request) *http.Request {
+func Sign4(req *http.Request, cred ...Credentials) *http.Request {
 	signMutex.Lock()
 	defer signMutex.Unlock()
-	checkKeys()
+	if cred == nil {
+		checkKeys()
+	} else {
+		Keys = &cred[0]
+	}
 
 	// Add the X-Amz-Security-Token header when using STS
 	if Keys.SecurityToken != "" {
@@ -73,10 +90,14 @@ func Sign4(req *http.Request) *http.Request {
 
 // Sign3 signs a request with Signed Signature Version 3.
 // If the service you're accessing supports Version 4, use that instead.
-func Sign3(req *http.Request) *http.Request {
+func Sign3(req *http.Request, cred ...Credentials) *http.Request {
 	signMutex.Lock()
 	defer signMutex.Unlock()
-	checkKeys()
+	if cred == nil {
+		checkKeys()
+	} else {
+		Keys = &cred[0]
+	}
 
 	// Add the X-Amz-Security-Token header when using STS
 	if Keys.SecurityToken != "" {
@@ -99,10 +120,14 @@ func Sign3(req *http.Request) *http.Request {
 
 // Sign2 signs a request with Signed Signature Version 2.
 // If the service you're accessing supports Version 4, use that instead.
-func Sign2(req *http.Request) *http.Request {
+func Sign2(req *http.Request, cred ...Credentials) *http.Request {
 	signMutex.Lock()
 	defer signMutex.Unlock()
-	checkKeys()
+	if cred == nil {
+		checkKeys()
+	} else {
+		Keys = &cred[0]
+	}
 
 	// Add the SecurityToken parameter when using STS
 	// This must be added before the signature is calculated
@@ -128,10 +153,14 @@ func Sign2(req *http.Request) *http.Request {
 
 // SignS3 signs a request bound for Amazon S3 using their custom
 // HTTP authentication scheme.
-func SignS3(req *http.Request) *http.Request {
+func SignS3(req *http.Request, cred ...Credentials) *http.Request {
 	signMutex.Lock()
 	defer signMutex.Unlock()
-	checkKeys()
+	if cred == nil {
+		checkKeys()
+	} else {
+		Keys = &cred[0]
+	}
 
 	// Add the X-Amz-Security-Token header when using STS
 	if Keys.SecurityToken != "" {
@@ -153,10 +182,14 @@ func SignS3(req *http.Request) *http.Request {
 // query string parameters containing credentials and signature. You must
 // specify an expiration date for these signed requests. After that date,
 // a request signed with this method will be rejected by S3.
-func SignS3Url(req *http.Request, expire time.Time) *http.Request {
+func SignS3Url(req *http.Request, expire time.Time, cred ...Credentials) *http.Request {
 	signMutex.Lock()
 	defer signMutex.Unlock()
-	checkKeys()
+	if cred == nil {
+		checkKeys()
+	} else {
+		Keys = &cred[0]
+	}
 
 	stringToSign := stringToSignS3Url("GET", expire, req.URL.Path)
 	signature := signatureS3(stringToSign)
