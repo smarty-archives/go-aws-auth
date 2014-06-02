@@ -14,17 +14,17 @@ func stringToSignV3(req *http.Request) string {
 	return req.Header.Get("Date") + req.Header.Get("x-amz-nonce")
 }
 
-func signatureV3(stringToSign string) string {
+func signatureV3(stringToSign string, keys Credentials) string {
 	// TASK 2. http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/RESTAuthentication.html#Signature
 
-	hash := hmacSHA256([]byte(Keys.SecretAccessKey), stringToSign)
+	hash := hmacSHA256([]byte(keys.SecretAccessKey), stringToSign)
 	return base64.StdEncoding.EncodeToString(hash)
 }
 
-func buildAuthHeaderV3(signature string) string {
+func buildAuthHeaderV3(signature string, keys Credentials) string {
 	// TASK 3. http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/RESTAuthentication.html#AuthorizationHeader
 
-	return "AWS3-HTTPS AWSAccessKeyId=" + Keys.AccessKeyID +
+	return "AWS3-HTTPS AWSAccessKeyId=" + keys.AccessKeyID +
 		", Algorithm=HmacSHA256" +
 		", Signature=" + signature
 }

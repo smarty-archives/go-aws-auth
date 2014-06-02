@@ -1,11 +1,11 @@
 package awsauth
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestSignature3(t *testing.T) {
@@ -13,7 +13,7 @@ func TestSignature3(t *testing.T) {
 	// http://docs.aws.amazon.com/ses/latest/DeveloperGuide/query-interface-authentication.html
 
 	Convey("Given bogus credentials", t, func() {
-		Keys = testCredV3
+		keys := *testCredV3
 
 		// Mock time
 		now = func() time.Time {
@@ -44,12 +44,12 @@ func TestSignature3(t *testing.T) {
 			})
 
 			Convey("The resulting signature should be correct", func() {
-				actual := signatureV3(stringToSignV3(req))
+				actual := signatureV3(stringToSignV3(req), keys)
 				So(actual, ShouldEqual, "PjAJ6buiV6l4WyzmmuwtKE59NJXVg5Dr3Sn4PCMZ0Yk=")
 			})
 
 			Convey("The final signed request should be correctly formed", func() {
-				Sign3(req)
+				Sign3(req, keys)
 				actual := req.Header.Get("X-Amzn-Authorization")
 				So(actual, ShouldResemble, expectedAuthHeaderV3)
 			})
@@ -86,10 +86,11 @@ func TestVersion3STSRequestPreparer(t *testing.T) {
 		req := test_plainRequestV3()
 
 		Convey("And a set of credentials with an STS token", func() {
-			Keys = testCredV3WithSTS
+			var keys Credentials
+			keys = *testCredV3WithSTS
 
 			Convey("It should include an X-Amz-Security-Token when the request is signed", func() {
-				actualSigned := Sign3(req)
+				actualSigned := Sign3(req, keys)
 				actual := actualSigned.Header.Get("X-Amz-Security-Token")
 
 				So(actual, ShouldNotBeBlank)

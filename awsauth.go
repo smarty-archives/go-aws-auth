@@ -9,10 +9,6 @@ import (
 	"time"
 )
 
-// Keys stores the authentication credentials to be used when signing requests.
-// You can set them manually or leave it to awsauth to use environment variables.
-var Keys *Credentials
-
 // Credentials stores the information necessary to authorize with AWS and it
 // is from this information that requests are signed.
 type Credentials struct {
@@ -24,33 +20,51 @@ type Credentials struct {
 
 // Sign signs a request bound for AWS. It automatically chooses the best
 // authentication scheme based on the service the request is going to.
-func Sign(req *http.Request) *http.Request {
+func Sign(req *http.Request, cred ...Credentials) *http.Request {
 	service, _ := serviceAndRegion(req.URL.Host)
 	sigVersion := awsSignVersion[service]
 
-	switch sigVersion {
-	case 2:
-		return Sign2(req)
-	case 3:
-		return Sign3(req)
-	case 4:
-		return Sign4(req)
-	case -1:
-		return SignS3(req)
+	if len(cred) == 0 {
+		switch sigVersion {
+		case 2:
+			return Sign2(req)
+		case 3:
+			return Sign3(req)
+		case 4:
+			return Sign4(req)
+		case -1:
+			return SignS3(req)
+		}
+	} else {
+		switch sigVersion {
+		case 2:
+			return Sign2(req, cred[0])
+		case 3:
+			return Sign3(req, cred[0])
+		case 4:
+			return Sign4(req, cred[0])
+		case -1:
+			return SignS3(req, cred[0])
+		}
 	}
 
 	return nil
 }
 
 // Sign4 signs a request with Signed Signature Version 4.
-func Sign4(req *http.Request) *http.Request {
+func Sign4(req *http.Request, cred ...Credentials) *http.Request {
 	signMutex.Lock()
 	defer signMutex.Unlock()
-	checkKeys()
+	var keys Credentials
+	if len(cred) == 0 {
+		keys = newKeys()
+	} else {
+		keys = cred[0]
+	}
 
 	// Add the X-Amz-Security-Token header when using STS
-	if Keys.SecurityToken != "" {
-		req.Header.Set("X-Amz-Security-Token", Keys.SecurityToken)
+	if keys.SecurityToken != "" {
+		req.Header.Set("X-Amz-Security-Token", keys.SecurityToken)
 	}
 
 	prepareRequestV4(req)
@@ -63,24 +77,29 @@ func Sign4(req *http.Request) *http.Request {
 	stringToSign := stringToSignV4(req, hashedCanonReq, meta)
 
 	// Task 3
-	signingKey := signingKeyV4(Keys.SecretAccessKey, meta.date, meta.region, meta.service)
+	signingKey := signingKeyV4(keys.SecretAccessKey, meta.date, meta.region, meta.service)
 	signature := signatureV4(signingKey, stringToSign)
 
-	req.Header.Set("Authorization", buildAuthHeaderV4(signature, meta))
+	req.Header.Set("Authorization", buildAuthHeaderV4(signature, meta, keys))
 
 	return req
 }
 
 // Sign3 signs a request with Signed Signature Version 3.
 // If the service you're accessing supports Version 4, use that instead.
-func Sign3(req *http.Request) *http.Request {
+func Sign3(req *http.Request, cred ...Credentials) *http.Request {
 	signMutex.Lock()
 	defer signMutex.Unlock()
-	checkKeys()
+	var keys Credentials
+	if len(cred) == 0 {
+		keys = newKeys()
+	} else {
+		keys = cred[0]
+	}
 
 	// Add the X-Amz-Security-Token header when using STS
-	if Keys.SecurityToken != "" {
-		req.Header.Set("X-Amz-Security-Token", Keys.SecurityToken)
+	if keys.SecurityToken != "" {
+		req.Header.Set("X-Amz-Security-Token", keys.SecurityToken)
 	}
 
 	prepareRequestV3(req)
@@ -89,34 +108,39 @@ func Sign3(req *http.Request) *http.Request {
 	stringToSign := stringToSignV3(req)
 
 	// Task 2
-	signature := signatureV3(stringToSign)
+	signature := signatureV3(stringToSign, keys)
 
 	// Task 3
-	req.Header.Set("X-Amzn-Authorization", buildAuthHeaderV3(signature))
+	req.Header.Set("X-Amzn-Authorization", buildAuthHeaderV3(signature, keys))
 
 	return req
 }
 
 // Sign2 signs a request with Signed Signature Version 2.
 // If the service you're accessing supports Version 4, use that instead.
-func Sign2(req *http.Request) *http.Request {
+func Sign2(req *http.Request, cred ...Credentials) *http.Request {
 	signMutex.Lock()
 	defer signMutex.Unlock()
-	checkKeys()
+	var keys Credentials
+	if len(cred) == 0 {
+		keys = newKeys()
+	} else {
+		keys = cred[0]
+	}
 
 	// Add the SecurityToken parameter when using STS
 	// This must be added before the signature is calculated
-	if Keys.SecurityToken != "" {
+	if keys.SecurityToken != "" {
 		v := url.Values{}
-		v.Set("SecurityToken", Keys.SecurityToken)
+		v.Set("SecurityToken", keys.SecurityToken)
 		augmentRequestQuery(req, v)
 
 	}
 
-	prepareRequestV2(req)
+	prepareRequestV2(req, keys)
 
 	stringToSign := stringToSignV2(req)
-	signature := signatureV2(stringToSign)
+	signature := signatureV2(stringToSign, keys)
 
 	values := url.Values{}
 	values.Set("Signature", signature)
@@ -128,22 +152,27 @@ func Sign2(req *http.Request) *http.Request {
 
 // SignS3 signs a request bound for Amazon S3 using their custom
 // HTTP authentication scheme.
-func SignS3(req *http.Request) *http.Request {
+func SignS3(req *http.Request, cred ...Credentials) *http.Request {
 	signMutex.Lock()
 	defer signMutex.Unlock()
-	checkKeys()
+	var keys Credentials
+	if len(cred) == 0 {
+		keys = newKeys()
+	} else {
+		keys = cred[0]
+	}
 
 	// Add the X-Amz-Security-Token header when using STS
-	if Keys.SecurityToken != "" {
-		req.Header.Set("X-Amz-Security-Token", Keys.SecurityToken)
+	if keys.SecurityToken != "" {
+		req.Header.Set("X-Amz-Security-Token", keys.SecurityToken)
 	}
 
 	prepareRequestS3(req)
 
 	stringToSign := stringToSignS3(req)
-	signature := signatureS3(stringToSign)
+	signature := signatureS3(stringToSign, keys)
 
-	authHeader := "AWS " + Keys.AccessKeyID + ":" + signature
+	authHeader := "AWS " + keys.AccessKeyID + ":" + signature
 	req.Header.Set("Authorization", authHeader)
 
 	return req
@@ -153,16 +182,21 @@ func SignS3(req *http.Request) *http.Request {
 // query string parameters containing credentials and signature. You must
 // specify an expiration date for these signed requests. After that date,
 // a request signed with this method will be rejected by S3.
-func SignS3Url(req *http.Request, expire time.Time) *http.Request {
+func SignS3Url(req *http.Request, expire time.Time, cred ...Credentials) *http.Request {
 	signMutex.Lock()
 	defer signMutex.Unlock()
-	checkKeys()
+	var keys Credentials
+	if len(cred) == 0 {
+		keys = newKeys()
+	} else {
+		keys = cred[0]
+	}
 
 	stringToSign := stringToSignS3Url("GET", expire, req.URL.Path)
-	signature := signatureS3(stringToSign)
+	signature := signatureS3(stringToSign, keys)
 
 	qs := req.URL.Query()
-	qs.Set("AWSAccessKeyId", Keys.AccessKeyID)
+	qs.Set("AWSAccessKeyId", keys.AccessKeyID)
 	qs.Set("Signature", signature)
 	qs.Set("Expires", timeToUnixEpochString(expire))
 	req.URL.RawQuery = qs.Encode()

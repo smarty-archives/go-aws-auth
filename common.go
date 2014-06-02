@@ -57,24 +57,22 @@ func serviceAndRegion(host string) (service string, region string) {
 	return
 }
 
-func checkKeys() {
-	if Keys == nil {
-		Keys = &Credentials{
-			AccessKeyID:     os.Getenv(envAccessKeyID),
-			SecretAccessKey: os.Getenv(envSecretAccessKey),
-			SecurityToken:   os.Getenv(envSecurityToken),
-		}
-	}
+func newKeys() (newCredentials Credentials) {
+
+	newCredentials.AccessKeyID = os.Getenv(envAccessKeyID)
+	newCredentials.SecretAccessKey = os.Getenv(envSecretAccessKey)
+	newCredentials.SecurityToken = os.Getenv(envSecurityToken)
 
 	// If there is no Access Key and you are on EC2, get the key from the role
-	if Keys.AccessKeyID == "" && onEC2() {
-		Keys = getIAMRoleCredentials()
+	if newCredentials.AccessKeyID == "" && onEC2() {
+		newCredentials = *getIAMRoleCredentials()
 	}
 
 	// If the key is expiring, get a new key
-	if Keys.expired() && onEC2() {
-		Keys = getIAMRoleCredentials()
+	if newCredentials.expired() && onEC2() {
+		newCredentials = *getIAMRoleCredentials()
 	}
+	return newCredentials
 }
 
 // onEC2 checks to see if the program is running on an EC2 instance.

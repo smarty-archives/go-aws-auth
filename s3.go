@@ -9,8 +9,8 @@ import (
 	"time"
 )
 
-func signatureS3(stringToSign string) string {
-	hashed := hmacSHA1([]byte(Keys.SecretAccessKey), stringToSign)
+func signatureS3(stringToSign string, keys Credentials) string {
+	hashed := hmacSHA1([]byte(keys.SecretAccessKey), stringToSign)
 	return base64.StdEncoding.EncodeToString(hashed)
 }
 

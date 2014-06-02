@@ -175,6 +175,42 @@ func TestSign(t *testing.T) {
 			So(signedReq.Header.Get("Authorization"), ShouldContainSubstring, ", Signature=")
 		}
 	})
+
+	var keys Credentials
+	keys = newKeys()
+	Convey("Requests to services using existing credentials Version 2 should be signed accordingly", t, func() {
+		reqs := []*http.Request{
+			newRequest("GET", "https://ec2.amazonaws.com", url.Values{}),
+			newRequest("GET", "https://elasticache.amazonaws.com/", url.Values{}),
+		}
+		for _, req := range reqs {
+			signedReq := Sign(req, keys)
+			So(signedReq.URL.Query().Get("SignatureVersion"), ShouldEqual, "2")
+		}
+	})
+
+	Convey("Requests to services using existing credentials Version 3 should be signed accordingly", t, func() {
+		reqs := []*http.Request{
+			newRequest("GET", "https://route53.amazonaws.com", url.Values{}),
+			newRequest("GET", "https://email.us-east-1.amazonaws.com/", url.Values{}),
+		}
+		for _, req := range reqs {
+			signedReq := Sign(req, keys)
+			So(signedReq.Header.Get("X-Amzn-Authorization"), ShouldNotBeBlank)
+		}
+	})
+
+	Convey("Requests to services using existing credentials Version 4 should be signed accordingly", t, func() {
+		reqs := []*http.Request{
+			newRequest("POST", "https://sqs.amazonaws.com/", url.Values{}),
+			newRequest("GET", "https://iam.amazonaws.com", url.Values{}),
+			newRequest("GET", "https://s3.amazonaws.com", url.Values{}),
+		}
+		for _, req := range reqs {
+			signedReq := Sign(req, keys)
+			So(signedReq.Header.Get("Authorization"), ShouldContainSubstring, ", Signature=")
+		}
+	})
 }
 
 func TestExpiration(t *testing.T) {
@@ -201,8 +237,9 @@ func TestExpiration(t *testing.T) {
 }
 
 func credentialsSet() bool {
-	checkKeys()
-	if Keys.AccessKeyID == "" {
+	var keys Credentials
+	keys = newKeys()
+	if keys.AccessKeyID == "" {
 		return false
 	} else {
 		return true
