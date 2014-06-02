@@ -87,8 +87,8 @@ func signingKeyV4(secretKey, date, region, service string) []byte {
 	return kSigning
 }
 
-func buildAuthHeaderV4(signature string, meta *metadata) string {
-	credential := Keys.AccessKeyID + "/" + meta.credentialScope
+func buildAuthHeaderV4(signature string, meta *metadata, keys Credentials) string {
+	credential := keys.AccessKeyID + "/" + meta.credentialScope
 
 	return meta.algorithm +
 		" Credential=" + credential +

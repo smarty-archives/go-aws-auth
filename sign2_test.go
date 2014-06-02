@@ -1,18 +1,18 @@
 package awsauth
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestSignature2(t *testing.T) {
 	// http://docs.aws.amazon.com/general/latest/gr/signature-version-2.html
 
 	Convey("Given bogus credentials", t, func() {
-		Keys = testCredV2
+		keys := *testCredV2
 
 		// Mock time
 		now = func() time.Time {
@@ -25,7 +25,7 @@ func TestSignature2(t *testing.T) {
 
 			Convey("The request should be prepared to be signed", func() {
 				expectedUnsigned := test_unsignedRequestV2()
-				prepareRequestV2(req)
+				prepareRequestV2(req, keys)
 				So(req, ShouldResemble, expectedUnsigned)
 			})
 		})
@@ -49,12 +49,12 @@ func TestSignature2(t *testing.T) {
 			})
 
 			Convey("The resulting signature should be correct", func() {
-				actual := signatureV2(stringToSignV2(req))
+				actual := signatureV2(stringToSignV2(req), keys)
 				So(actual, ShouldEqual, "i91nKc4PWAt0JJIdXwz9HxZCJDdiy6cf/Mj6vPxyYIs=")
 			})
 
 			Convey("The final signed request should be correctly formed", func() {
-				Sign2(req)
+				Sign2(req, keys)
 				actual := req.URL.String()
 				So(actual, ShouldResemble, expectedFinalUrlV2)
 			})
@@ -67,10 +67,11 @@ func TestVersion2STSRequestPreparer(t *testing.T) {
 		req := test_plainRequestV2()
 
 		Convey("And a set of credentials with an STS token", func() {
-			Keys = testCredV2WithSTS
+			var keys Credentials
+			keys = *testCredV2WithSTS
 
 			Convey("It should include the SecurityToken parameter when the request is signed", func() {
-				actualSigned := Sign2(req)
+				actualSigned := Sign2(req, keys)
 				actual := actualSigned.URL.Query()["SecurityToken"][0]
 
 				So(actual, ShouldNotBeBlank)

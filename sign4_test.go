@@ -1,11 +1,11 @@
 package awsauth
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/url"
 	"strings"
 	"testing"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestVersion4RequestPreparer(t *testing.T) {
@@ -26,10 +26,11 @@ func TestVersion4RequestPreparer(t *testing.T) {
 		})
 
 		Convey("And a set of credentials", func() {
-			Keys = testCredV4
+			var keys Credentials
+			keys = *testCredV4
 
 			Convey("It should be signed with an Authorization header", func() {
-				actualSigned := Sign4(req)
+				actualSigned := Sign4(req, keys)
 				actual := actualSigned.Header.Get("Authorization")
 
 				So(actual, ShouldNotBeBlank)
@@ -55,10 +56,11 @@ func TestVersion4STSRequestPreparer(t *testing.T) {
 		req := test_plainRequestV4(false)
 
 		Convey("And a set of credentials with an STS token", func() {
-			Keys = testCredV4WithSTS
+			var keys Credentials
+			keys = *testCredV4WithSTS
 
 			Convey("It should include an X-Amz-Security-Token when the request is signed", func() {
-				actualSigned := Sign4(req)
+				actualSigned := Sign4(req, keys)
 				actual := actualSigned.Header.Get("X-Amz-Security-Token")
 
 				So(actual, ShouldNotBeBlank)
@@ -101,6 +103,9 @@ func TestVersion4SigningTasks(t *testing.T) {
 }
 
 func TestSignature4Helpers(t *testing.T) {
+
+	keys := *testCredV4
+
 	Convey("The signing key should be properly generated", t, func() {
 		expected := []byte{152, 241, 216, 137, 254, 196, 244, 66, 26, 220, 82, 43, 171, 12, 225, 248, 46, 105, 41, 194, 98, 237, 21, 229, 169, 76, 144, 239, 209, 227, 176, 231}
 		actual := test_signingKeyV4()
@@ -115,7 +120,7 @@ func TestSignature4Helpers(t *testing.T) {
 			signedHeaders:   "content-type;host;x-amz-date",
 		}
 		expected := expectingV4["AuthHeader"] + expectingV4["SignatureV4"]
-		actual := buildAuthHeaderV4(expectingV4["SignatureV4"], meta)
+		actual := buildAuthHeaderV4(expectingV4["SignatureV4"], meta, keys)
 
 		So(actual, ShouldEqual, expected)
 	})

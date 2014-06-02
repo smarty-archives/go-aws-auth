@@ -15,7 +15,7 @@ func TestSignatureS3(t *testing.T) {
 	// (but signed URL requests still utilize a lot of the same functionality)
 
 	Convey("Given a GET request to Amazon S3", t, func() {
-		Keys = testCredS3
+		keys := *testCredS3
 		req := test_plainRequestS3()
 
 		// Mock time
@@ -46,13 +46,13 @@ func TestSignatureS3(t *testing.T) {
 		})
 
 		Convey("The final signature string should be exactly correct", func() {
-			actual := signatureS3(stringToSignS3(req))
+			actual := signatureS3(stringToSignS3(req), keys)
 			So(actual, ShouldEqual, "bWq2s1WEIj+Ydj0vQ697zp+IXMU=")
 		})
 	})
 
 	Convey("Given a GET request for a resource on S3 for query string authentication", t, func() {
-		Keys = testCredS3
+		keys := *testCredS3
 		req, _ := http.NewRequest("GET", "https://johnsmith.s3.amazonaws.com/johnsmith/photos/puppy.jpg", nil)
 
 		now = func() time.Time {
@@ -66,13 +66,13 @@ func TestSignatureS3(t *testing.T) {
 		})
 
 		Convey("The signature of string to sign should be correct", func() {
-			actual := signatureS3(expectedStringToSignS3Url)
+			actual := signatureS3(expectedStringToSignS3Url, keys)
 			So(actual, ShouldEqual, "R2K/+9bbnBIbVDCs7dqlz3XFtBQ=")
 		})
 
 		Convey("The finished signed URL should be correct", func() {
 			expiry := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
-			So(SignS3Url(req, expiry).URL.String(), ShouldEqual, expectedSignedS3Url)
+			So(SignS3Url(req, expiry, keys).URL.String(), ShouldEqual, expectedSignedS3Url)
 		})
 	})
 }
@@ -82,10 +82,10 @@ func TestS3STSRequestPreparer(t *testing.T) {
 		req := test_plainRequestS3()
 
 		Convey("And a set of credentials with an STS token", func() {
-			Keys = testCredS3WithSTS
+			keys := *testCredS3WithSTS
 
 			Convey("It should include an X-Amz-Security-Token when the request is signed", func() {
-				actualSigned := SignS3(req)
+				actualSigned := SignS3(req, keys)
 				actual := actualSigned.Header.Get("X-Amz-Security-Token")
 
 				So(actual, ShouldNotBeBlank)

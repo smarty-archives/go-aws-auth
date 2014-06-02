@@ -7,12 +7,9 @@ import (
 	"strings"
 )
 
-func prepareRequestV2(req *http.Request) *http.Request {
-	keyID := ""
+func prepareRequestV2(req *http.Request, keys Credentials) *http.Request {
 
-	if Keys != nil {
-		keyID = Keys.AccessKeyID
-	}
+	keyID := keys.AccessKeyID
 
 	values := url.Values{}
 	values.Set("AWSAccessKeyId", keyID)
@@ -37,8 +34,8 @@ func stringToSignV2(req *http.Request) string {
 	return str
 }
 
-func signatureV2(strToSign string) string {
-	hashed := hmacSHA256([]byte(Keys.SecretAccessKey), strToSign)
+func signatureV2(strToSign string, keys Credentials) string {
+	hashed := hmacSHA256([]byte(keys.SecretAccessKey), strToSign)
 	return base64.StdEncoding.EncodeToString(hashed)
 }
 
