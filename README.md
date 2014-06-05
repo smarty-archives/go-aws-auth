@@ -36,14 +36,14 @@ Then import it:
 
 The library looks for credentials in this order:
 
-1. **Hard-code:** You can manually wire the credentials into `awsauth.Keys` for testing or spike code:
+1. **Hard-code:** You can manually pass in an instance of `awsauth.Credentials` to any call to a signing function as a second argument:
 
 	```go
-	awsauth.Keys = &awsauth.Credentials{
+	awsauth.Sign(req, awsauth.Credentials{
 		AccessKeyID: "Access Key ID", 
 		SecretAccessKey: "Secret Access Key",
 		SecurityToken: "Security Token",	// STS (optional)
-	}
+	})
 	```
 
 
@@ -51,13 +51,13 @@ The library looks for credentials in this order:
 
 3. **IAM Role:** If running on EC2 and the credentials are neither hard-coded nor in the environment, go-aws-auth will detect the first IAM role assigned to the current EC2 instance and use those credentials.
 
-Be especially careful with option 1 if the code is committed to source control.
+(Be especially careful hard-coding credentials into your application if the code is committed to source control.)
 
 
 
 ### Signing requests
 
-Once your credentials are set up, just make the request, have it signed, and perform the request as usual.
+Just make the request, have it signed, and perform the request as you normally would.
 
 ```go
 url := "https://iam.amazonaws.com/?Action=ListRoles&Version=2010-05-08"
@@ -69,6 +69,15 @@ awsauth.Sign(req)	// Automatically chooses the best signing mechanism for the se
 
 resp, err := client.Do(req)
 ```
+
+You can use `Sign` to have the library choose the best signing algorithm depending on the service, or you can specify it manually if you know what you need:
+
+- `Sign2`
+- `Sign3`
+- `Sign4`
+- `SignS3` (deprecated)
+- `SignS3Url` (for pre-signed S3 URLs; GETs only)
+
 
 
 ### Contributing
