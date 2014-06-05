@@ -24,28 +24,15 @@ func Sign(req *http.Request, cred ...Credentials) *http.Request {
 	service, _ := serviceAndRegion(req.URL.Host)
 	sigVersion := awsSignVersion[service]
 
-	if len(cred) == 0 {
-		switch sigVersion {
-		case 2:
-			return Sign2(req)
-		case 3:
-			return Sign3(req)
-		case 4:
-			return Sign4(req)
-		case -1:
-			return SignS3(req)
-		}
-	} else {
-		switch sigVersion {
-		case 2:
-			return Sign2(req, cred[0])
-		case 3:
-			return Sign3(req, cred[0])
-		case 4:
-			return Sign4(req, cred[0])
-		case -1:
-			return SignS3(req, cred[0])
-		}
+	switch sigVersion {
+	case 2:
+		return Sign2(req, cred...)
+	case 3:
+		return Sign3(req, cred...)
+	case 4:
+		return Sign4(req, cred...)
+	case -1:
+		return SignS3(req, cred...)
 	}
 
 	return nil
@@ -55,12 +42,7 @@ func Sign(req *http.Request, cred ...Credentials) *http.Request {
 func Sign4(req *http.Request, cred ...Credentials) *http.Request {
 	signMutex.Lock()
 	defer signMutex.Unlock()
-	var keys Credentials
-	if len(cred) == 0 {
-		keys = newKeys()
-	} else {
-		keys = cred[0]
-	}
+	keys := chooseKeys(cred)
 
 	// Add the X-Amz-Security-Token header when using STS
 	if keys.SecurityToken != "" {
@@ -90,12 +72,7 @@ func Sign4(req *http.Request, cred ...Credentials) *http.Request {
 func Sign3(req *http.Request, cred ...Credentials) *http.Request {
 	signMutex.Lock()
 	defer signMutex.Unlock()
-	var keys Credentials
-	if len(cred) == 0 {
-		keys = newKeys()
-	} else {
-		keys = cred[0]
-	}
+	keys := chooseKeys(cred)
 
 	// Add the X-Amz-Security-Token header when using STS
 	if keys.SecurityToken != "" {
@@ -121,12 +98,7 @@ func Sign3(req *http.Request, cred ...Credentials) *http.Request {
 func Sign2(req *http.Request, cred ...Credentials) *http.Request {
 	signMutex.Lock()
 	defer signMutex.Unlock()
-	var keys Credentials
-	if len(cred) == 0 {
-		keys = newKeys()
-	} else {
-		keys = cred[0]
-	}
+	keys := chooseKeys(cred)
 
 	// Add the SecurityToken parameter when using STS
 	// This must be added before the signature is calculated
@@ -155,12 +127,7 @@ func Sign2(req *http.Request, cred ...Credentials) *http.Request {
 func SignS3(req *http.Request, cred ...Credentials) *http.Request {
 	signMutex.Lock()
 	defer signMutex.Unlock()
-	var keys Credentials
-	if len(cred) == 0 {
-		keys = newKeys()
-	} else {
-		keys = cred[0]
-	}
+	keys := chooseKeys(cred)
 
 	// Add the X-Amz-Security-Token header when using STS
 	if keys.SecurityToken != "" {
@@ -185,12 +152,7 @@ func SignS3(req *http.Request, cred ...Credentials) *http.Request {
 func SignS3Url(req *http.Request, expire time.Time, cred ...Credentials) *http.Request {
 	signMutex.Lock()
 	defer signMutex.Unlock()
-	var keys Credentials
-	if len(cred) == 0 {
-		keys = newKeys()
-	} else {
-		keys = cred[0]
-	}
+	keys := chooseKeys(cred)
 
 	stringToSign := stringToSignS3Url("GET", expire, req.URL.Path)
 	signature := signatureS3(stringToSign, keys)

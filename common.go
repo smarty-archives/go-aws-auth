@@ -57,8 +57,9 @@ func serviceAndRegion(host string) (service string, region string) {
 	return
 }
 
+// newKeys produces a set of credentials based on the environment
 func newKeys() (newCredentials Credentials) {
-
+	// First use credentials from environment variables
 	newCredentials.AccessKeyID = os.Getenv(envAccessKeyID)
 	newCredentials.SecretAccessKey = os.Getenv(envSecretAccessKey)
 	newCredentials.SecurityToken = os.Getenv(envSecurityToken)
@@ -72,7 +73,18 @@ func newKeys() (newCredentials Credentials) {
 	if newCredentials.expired() && onEC2() {
 		newCredentials = *getIAMRoleCredentials()
 	}
+
 	return newCredentials
+}
+
+// checkKeys gets credentials depending on if any were passed in as an argument
+// or it makes new ones based on the environment.
+func chooseKeys(cred []Credentials) Credentials {
+	if len(cred) == 0 {
+		return newKeys()
+	} else {
+		return cred[0]
+	}
 }
 
 // onEC2 checks to see if the program is running on an EC2 instance.
