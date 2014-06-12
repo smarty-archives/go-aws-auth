@@ -39,7 +39,7 @@ func serviceAndRegion(host string) (service string, region string) {
 		if parts[1] == "s3" {
 			service = "s3"
 		} else if strings.HasPrefix(parts[1], "s3-") {
-			region = region[3:]
+			region = parts[1][3:]
 			service = "s3"
 		} else {
 			service = parts[0]
