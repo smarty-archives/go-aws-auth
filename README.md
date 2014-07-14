@@ -1,11 +1,12 @@
 go-aws-auth
 ===========
 
+[![GoDoc](https://godoc.org/github.com/smartystreets/go-aws-auth?status.svg)](http://godoc.org/github.com/smartystreets/go-aws-auth)
+
 Go-AWS-Auth is a comprehensive, lightweight library for signing requests to Amazon Web Services.
 
 It's easy to use: simply build your HTTP request and call `awsauth.Sign(req)` before sending your request over the wire.
 
-**[Full GoDoc Documentation](http://godoc.org/github.com/smartystreets/go-aws-auth)**
 
 
 ### Supported signing mechanisms
@@ -15,7 +16,7 @@ It's easy to use: simply build your HTTP request and call `awsauth.Sign(req)` be
 - [Signed Signature Version 4](http://docs.aws.amazon.com/general/latest/gr/signature-version-4.html)
 - [Custom S3 Authentication Scheme](http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html)
 - [Security Token Service](http://docs.aws.amazon.com/STS/latest/APIReference/Welcome.html)
-- [S3 Query String Authentication](http://docs.aws.amazon.com/AmazonS3/latest/dev/S3_QSAuth.html)
+- [S3 Query String Authentication](http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html#RESTAuthenticationQueryStringAuth)
 - [IAM Role](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#instance-metadata-security-credentials)
 
 For more info about AWS authentication, see the [comprehensive docs](http://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html) at AWS.
@@ -65,7 +66,7 @@ client := new(http.Client)
 
 req, err := http.NewRequest("GET", url, nil)
 
-awsauth.Sign(req)	// Automatically chooses the best signing mechanism for the service
+awsauth.Sign(req)  // Automatically chooses the best signing mechanism for the service
 
 resp, err := client.Do(req)
 ```
@@ -75,7 +76,7 @@ You can use `Sign` to have the library choose the best signing algorithm dependi
 - `Sign2`
 - `Sign3`
 - `Sign4`
-- `SignS3` (deprecated)
+- `SignS3` (deprecated for Sign4)
 - `SignS3Url` (for pre-signed S3 URLs; GETs only)
 
 
