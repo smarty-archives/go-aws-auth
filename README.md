@@ -30,7 +30,7 @@ Go get it:
 	
 Then import it:
 
-	import "github.com/smartystreets/awsauth"
+	import "github.com/smartystreets/go-aws-auth"
 
 
 ### Using your AWS Credentials
