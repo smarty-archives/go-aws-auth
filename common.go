@@ -242,7 +242,8 @@ var now = func() time.Time {
 func normuri(uri string) string {
 	parts := strings.Split(uri, "/")
 	for i := range parts {
-		parts[i] = url.QueryEscape(parts[i])
+		u := &url.URL{Path: parts[i]}
+		parts[i] = u.String()
 	}
 	return strings.Join(parts, "/")
 }
