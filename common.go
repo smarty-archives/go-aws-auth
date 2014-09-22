@@ -238,3 +238,11 @@ func concat(delim string, str ...string) string {
 var now = func() time.Time {
 	return time.Now().UTC()
 }
+
+func normuri(uri string) string {
+	parts := strings.Split(uri, "/")
+	for i := range parts {
+		parts[i] = url.QueryEscape(parts[i])
+	}
+	return strings.Join(parts, "/")
+}
