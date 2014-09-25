@@ -70,4 +70,9 @@ func TestCommonFunctions(t *testing.T) {
 		So(concat(".", "Test1"), ShouldEqual, "Test1")
 		So(concat("\t", "1", "2", "3", "4"), ShouldEqual, "1\t2\t3\t4")
 	})
+
+	Convey("URI components should be properly encoded", t, func() {
+		So(normuri("/-._~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"), ShouldEqual, "/-._~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
+		So(normuri("/ /foo"), ShouldEqual, "/%20/foo")
+	})
 }
