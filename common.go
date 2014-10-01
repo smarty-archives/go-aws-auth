@@ -54,6 +54,10 @@ func serviceAndRegion(host string) (service string, region string) {
 		}
 	}
 
+	if region == "external-1" {
+		region = "us-east-1"
+	}
+
 	return
 }
 
