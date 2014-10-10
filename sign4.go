@@ -20,7 +20,7 @@ func hashedCanonicalRequestV4(req *http.Request, meta *metadata) string {
 	var sortedHeaderKeys []string
 	for key, _ := range req.Header {
 		switch key {
-		case "Content-Type", "Host":
+		case "Content-Type", "Content-Md5", "Host":
 		default:
 			if !strings.HasPrefix(key, "X-Amz-") {
 				continue
