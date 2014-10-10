@@ -246,8 +246,45 @@ var now = func() time.Time {
 func normuri(uri string) string {
 	parts := strings.Split(uri, "/")
 	for i := range parts {
-		u := &url.URL{Path: parts[i]}
-		parts[i] = u.String()
+		parts[i] = encodePathFrag(parts[i])
 	}
 	return strings.Join(parts, "/")
+}
+
+func encodePathFrag(s string) string {
+	hexCount := 0
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if shouldEscape(c) {
+			hexCount++
+		}
+	}
+	t := make([]byte, len(s)+2*hexCount)
+	j := 0
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if shouldEscape(c) {
+			t[j] = '%'
+			t[j+1] = "0123456789ABCDEF"[c>>4]
+			t[j+2] = "0123456789ABCDEF"[c&15]
+			j += 3
+		} else {
+			t[j] = c
+			j++
+		}
+	}
+	return string(t)
+}
+
+func shouldEscape(c byte) bool {
+	if 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' {
+		return false
+	}
+	if '0' <= c && c <= '9' {
+		return false
+	}
+	if c == '-' || c == '_' || c == '.' || c == '~' {
+		return false
+	}
+	return true
 }
