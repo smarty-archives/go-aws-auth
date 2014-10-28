@@ -2,6 +2,7 @@ package awsauth
 
 import (
 	"testing"
+	"net/url"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -80,5 +81,9 @@ func TestCommonFunctions(t *testing.T) {
 		So(normuri("/-._~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"), ShouldEqual, "/-._~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
 		So(normuri("/ /foo"), ShouldEqual, "/%20/foo")
 		So(normuri("/(foo)"), ShouldEqual, "/%28foo%29")
+	})
+
+	Convey("URI query strings should be properly encoded", t, func() {
+		So(normquery(url.Values{"p": []string{" +&;-=._~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"}}), ShouldEqual, "p=%20%2B%26%3B-%3D._~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
 	})
 }
