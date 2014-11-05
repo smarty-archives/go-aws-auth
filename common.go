@@ -288,3 +288,13 @@ func shouldEscape(c byte) bool {
 	}
 	return true
 }
+
+func normquery(v url.Values) string {
+	qs := v.Encode()
+
+	// Go encodes a space as '+' but Amazon require '%20'. Luckily any '+' in the
+	// original query string has been percent escaped so all '+' chars that are left
+	// were originally spaces.
+
+	return strings.Replace(qs, "+", "%20", -1)
+}
