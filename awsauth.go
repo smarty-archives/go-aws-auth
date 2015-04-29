@@ -194,7 +194,9 @@ type metadata struct {
 }
 
 const (
+	envAccessKey       = "AWS_ACCESS_KEY"
 	envAccessKeyID     = "AWS_ACCESS_KEY_ID"
+	envSecretKey       = "AWS_SECRET_KEY"
 	envSecretAccessKey = "AWS_SECRET_ACCESS_KEY"
 	envSecurityToken   = "AWS_SECURITY_TOKEN"
 )

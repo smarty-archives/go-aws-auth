@@ -65,11 +65,19 @@ func serviceAndRegion(host string) (service string, region string) {
 func newKeys() (newCredentials Credentials) {
 	// First use credentials from environment variables
 	newCredentials.AccessKeyID = os.Getenv(envAccessKeyID)
+	if newCredentials.AccessKeyID == "" {
+		newCredentials.AccessKeyID = os.Getenv(envAccessKey)
+	}
+
 	newCredentials.SecretAccessKey = os.Getenv(envSecretAccessKey)
+	if newCredentials.SecretAccessKey == "" {
+		newCredentials.SecretAccessKey = os.Getenv(envSecretKey)
+	}
+
 	newCredentials.SecurityToken = os.Getenv(envSecurityToken)
 
 	// If there is no Access Key and you are on EC2, get the key from the role
-	if newCredentials.AccessKeyID == "" && onEC2() {
+	if (newCredentials.AccessKeyID == "" || newCredentials.SecretAccessKey == "") && onEC2() {
 		newCredentials = *getIAMRoleCredentials()
 	}
 
