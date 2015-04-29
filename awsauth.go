@@ -19,10 +19,14 @@ type Credentials struct {
 }
 
 // Sign signs a request bound for AWS. It automatically chooses the best
-// authentication scheme based on the service the request is going to.
+// authentication scheme based on the service and region the request is going
+// to.
 func Sign(req *http.Request, cred ...Credentials) *http.Request {
-	service, _ := serviceAndRegion(req.URL.Host)
+	service, region := serviceAndRegion(req.URL.Host)
 	sigVersion := awsSignVersion[service]
+	if regionSigVersion, present := awsRegionSignVersion[region]; present && sigVersion < regionSigVersion {
+		sigVersion = regionSigVersion
+	}
 
 	switch sigVersion {
 	case 2:
@@ -227,6 +231,10 @@ var (
 		"route53":              3,
 		"elasticloadbalancing": 4,
 		"email":                3,
+	}
+
+	awsRegionSignVersion = map[string]int{
+		"eu-central-1": 4,
 	}
 
 	signMutex sync.Mutex

@@ -211,6 +211,18 @@ func TestSign(t *testing.T) {
 			So(signedReq.Header.Get("Authorization"), ShouldContainSubstring, ", Signature=")
 		}
 	})
+
+	Convey("Requests to regions requiring Version 4 should be signed accordingly", t, func() {
+		reqs := []*http.Request{
+			newRequest("GET", "https://ec2.eu-central-1.amazonaws.com", url.Values{}), // Normally V2
+			newRequest("GET", "https://email.eu-central-1.amazonaws.com", url.Values{}), // Normally V3
+			newRequest("GET", "https://s3.eu-central-1.amazonaws.com", url.Values{}), // Normally V4
+		}
+		for _, req := range reqs {
+			signedReq := Sign(req)
+			So(signedReq.Header.Get("Authorization"), ShouldContainSubstring, ", Signature=")
+		}
+	})
 }
 
 func TestExpiration(t *testing.T) {
