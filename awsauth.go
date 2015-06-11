@@ -5,7 +5,6 @@ package awsauth
 import (
 	"net/http"
 	"net/url"
-	"sync"
 	"time"
 )
 
@@ -40,8 +39,6 @@ func Sign(request *http.Request, credentials ...Credentials) *http.Request {
 
 // Sign4 signs a request with Signed Signature Version 4.
 func Sign4(request *http.Request, credentials ...Credentials) *http.Request {
-	signMutex.Lock()
-	defer signMutex.Unlock()
 	keys := chooseKeys(credentials)
 
 	// Add the X-Amz-Security-Token header when using STS
@@ -70,8 +67,6 @@ func Sign4(request *http.Request, credentials ...Credentials) *http.Request {
 // Sign3 signs a request with Signed Signature Version 3.
 // If the service you're accessing supports Version 4, use that instead.
 func Sign3(request *http.Request, credentials ...Credentials) *http.Request {
-	signMutex.Lock()
-	defer signMutex.Unlock()
 	keys := chooseKeys(credentials)
 
 	// Add the X-Amz-Security-Token header when using STS
@@ -96,8 +91,6 @@ func Sign3(request *http.Request, credentials ...Credentials) *http.Request {
 // Sign2 signs a request with Signed Signature Version 2.
 // If the service you're accessing supports Version 4, use that instead.
 func Sign2(request *http.Request, credentials ...Credentials) *http.Request {
-	signMutex.Lock()
-	defer signMutex.Unlock()
 	keys := chooseKeys(credentials)
 
 	// Add the SecurityToken parameter when using STS
@@ -124,8 +117,6 @@ func Sign2(request *http.Request, credentials ...Credentials) *http.Request {
 // SignS3 signs a request bound for Amazon S3 using their custom
 // HTTP authentication scheme.
 func SignS3(request *http.Request, credentials ...Credentials) *http.Request {
-	signMutex.Lock()
-	defer signMutex.Unlock()
 	keys := chooseKeys(credentials)
 
 	// Add the X-Amz-Security-Token header when using STS
@@ -149,8 +140,6 @@ func SignS3(request *http.Request, credentials ...Credentials) *http.Request {
 // specify an expiration date for these signed requests. After that date,
 // a request signed with this method will be rejected by S3.
 func SignS3Url(request *http.Request, expire time.Time, credentials ...Credentials) *http.Request {
-	signMutex.Lock()
-	defer signMutex.Unlock()
 	keys := chooseKeys(credentials)
 
 	stringToSign := stringToSignS3Url("GET", expire, request.URL.Path)
@@ -227,6 +216,4 @@ var (
 		"elasticloadbalancing": 4,
 		"email":                3,
 	}
-
-	signMutex sync.Mutex
 )
