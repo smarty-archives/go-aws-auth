@@ -13,6 +13,10 @@ import (
 )
 
 func TestIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping long-running integration test.")
+	}
+
 	Convey("Given real credentials from environment variables", t, func() {
 		Convey("A request (with out-of-order query string) with to IAM should succeed (assuming Administrator Access policy)", func() {
 			request := newRequest("GET", "https://iam.amazonaws.com/?Version=2010-05-08&Action=ListRoles", nil)
