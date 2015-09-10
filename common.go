@@ -61,6 +61,41 @@ func serviceAndRegion(host string) (service string, region string) {
 	return
 }
 
+// serviceAndRegion parsers a hostname to find out which ones it is.
+// http://docs.aws.amazon.com/general/latest/gr/rande.html
+func serviceAndRegion2(host string, host_region string, host_service string) (service string, region string) {
+	// These are the defaults if the hostname doesn't suggest something else
+	region = host_region
+	service = host_service
+
+	parts := strings.Split(host, ".")
+	if len(parts) == 4 {
+		// Either service.region.amazonaws.com or virtual-host.region.amazonaws.com
+		if parts[1] == "s3" {
+			service = "s3"
+		} else if strings.HasPrefix(parts[1], "s3-") {
+			region = parts[1][3:]
+			service = "s3"
+		} else {
+			service = parts[0]
+			region = parts[1]
+		}
+	} else {
+		// Either service.amazonaws.com or s3-region.amazonaws.com
+		if strings.HasPrefix(parts[0], "s3-") {
+			region = parts[0][3:]
+		} else {
+			service = parts[0]
+		}
+	}
+
+	if region == "external-1" {
+		region = "us-east-1"
+	}
+
+	return
+}
+
 // newKeys produces a set of credentials based on the environment
 func newKeys() (newCredentials Credentials) {
 	// First use credentials from environment variables
