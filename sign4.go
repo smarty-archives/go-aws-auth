@@ -33,6 +33,16 @@ func hashedCanonicalRequestV4(request *http.Request, meta *metadata) string {
 	var headersToSign string
 	for _, key := range sortedHeaderKeys {
 		value := strings.TrimSpace(request.Header.Get(key))
+		if key == "host" {
+			//AWS does not include port in signing request.
+			if strings.Contains(value, ":") {
+				split := strings.Split(value, ":")
+				port := split[1]
+				if port == "80" || port == "443" {
+					value = split[0]
+				}
+			}
+		}
 		headersToSign += key + ":" + value + "\n"
 	}
 	meta.signedHeaders = concat(";", sortedHeaderKeys...)
