@@ -45,8 +45,12 @@ func hashedCanonicalRequestV4(request *http.Request, meta *metadata) string {
 		}
 		headersToSign += key + ":" + value + "\n"
 	}
+	var isS3 bool
+	if strings.Contains(request.Host, "s3.amazonaws.com") {
+		isS3 = true
+	}
 	meta.signedHeaders = concat(";", sortedHeaderKeys...)
-	canonicalRequest := concat("\n", request.Method, normuri(request.URL.Path), normquery(request.URL.Query()), headersToSign, meta.signedHeaders, payloadHash)
+	canonicalRequest := concat("\n", request.Method, normuri(request.URL.Path, isS3), normquery(request.URL.Query()), headersToSign, meta.signedHeaders, payloadHash)
 
 	return hashSHA256([]byte(canonicalRequest))
 }
