@@ -254,19 +254,22 @@ var now = func() time.Time {
 	return time.Now().UTC()
 }
 
-func normuri(uri string) string {
+func normuri(uri string, isS3 bool) string {
 	parts := strings.Split(uri, "/")
 	for i := range parts {
-		parts[i] = encodePathFrag(parts[i])
+		parts[i] = encodePathFrag(parts[i], isS3)
 	}
 	return strings.Join(parts, "/")
 }
 
-func encodePathFrag(s string) string {
+func encodePathFrag(s string, isS3 bool) string {
 	hexCount := 0
 	for i := 0; i < len(s); i++ {
 		c := s[i]
 		if shouldEscape(c) {
+			hexCount++
+		}
+		if !isS3 && shouldDoubleEscape(c) {
 			hexCount++
 		}
 	}
@@ -274,17 +277,41 @@ func encodePathFrag(s string) string {
 	j := 0
 	for i := 0; i < len(s); i++ {
 		c := s[i]
-		if shouldEscape(c) {
+		switch {
+		case !isS3 && shouldDoubleEscape(c):
 			t[j] = '%'
-			t[j+1] = "0123456789ABCDEF"[c>>4]
-			t[j+2] = "0123456789ABCDEF"[c&15]
-			j += 3
-		} else {
+			j = escape(t, j+1, '%')
+			j = escape(t, j, c)
+		case shouldEscape(c):
+			t[j] = '%'
+			j = escape(t, j+1, c) + 1
+		default:
 			t[j] = c
 			j++
 		}
 	}
 	return string(t)
+}
+
+func escape(t []byte, j int, c byte) int {
+	t[j] = "0123456789ABCDEF"[c>>4]
+	t[j+1] = "0123456789ABCDEF"[c&15]
+	return j + 2
+}
+
+func shouldDoubleEscape(c byte) bool {
+	if c == '!' ||
+		c == '"' ||
+		c == '#' ||
+		c == '%' ||
+		c == '\'' ||
+		c == '(' ||
+		c == ')' ||
+		c == '*' ||
+		c == ',' {
+		return true
+	}
+	return false
 }
 
 func shouldEscape(c byte) bool {

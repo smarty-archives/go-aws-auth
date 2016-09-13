@@ -78,9 +78,9 @@ func TestCommonFunctions(t *testing.T) {
 	})
 
 	Convey("URI components should be properly encoded", t, func() {
-		So(normuri("/-._~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"), ShouldEqual, "/-._~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
-		So(normuri("/ /foo"), ShouldEqual, "/%20/foo")
-		So(normuri("/(foo)"), ShouldEqual, "/%28foo%29")
+		So(normuri("/-._~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", false), ShouldEqual, "/-._~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
+		So(normuri("/ /foo", false), ShouldEqual, "/%20/foo")
+		So(normuri("/(foo)", false), ShouldEqual, "/%2528foo%2529")
 	})
 
 	Convey("URI query strings should be properly encoded", t, func() {
