@@ -36,6 +36,10 @@ func TestCommonFunctions(t *testing.T) {
 		service, region = serviceAndRegion("s3-external-1.amazonaws.com")
 		So(service, ShouldEqual, "s3")
 		So(region, ShouldEqual, "us-east-1")
+
+		service, region = serviceAndRegion("foo123bar.execute-api.us-east-1.amazonaws.com")
+		So(service, ShouldEqual, "execute-api")
+		So(region, ShouldEqual, "us-east-1")
 	})
 
 	Convey("MD5 hashes should be properly computed and base-64 encoded", t, func() {

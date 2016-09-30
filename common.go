@@ -9,12 +9,15 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/go-ini/ini"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -46,8 +49,14 @@ func serviceAndRegion(host string) (service string, region string) {
 			region = parts[1]
 		}
 	} else if len(parts) == 5 {
-		service = parts[2]
-		region = parts[1]
+		if parts[1] == "execute-api" { //TODO: is this the only service?
+			// API Gateway ("execute-api") has form 1234abcd56.execute-api.us-east-1.amazonaws.com
+			service = parts[1]
+			region = parts[2]
+		} else {
+			service = parts[2]
+			region = parts[1]
+		}
 	} else {
 		// Either service.amazonaws.com or s3-region.amazonaws.com
 		if strings.HasPrefix(parts[0], "s3-") {
@@ -66,18 +75,14 @@ func serviceAndRegion(host string) (service string, region string) {
 
 // newKeys produces a set of credentials based on the environment
 func newKeys() (newCredentials Credentials) {
-	// First use credentials from environment variables
-	newCredentials.AccessKeyID = os.Getenv(envAccessKeyID)
-	if newCredentials.AccessKeyID == "" {
-		newCredentials.AccessKeyID = os.Getenv(envAccessKey)
+	var err error
+	if newCredentials, err = envRetrieve(); err == nil {
+		return
 	}
 
-	newCredentials.SecretAccessKey = os.Getenv(envSecretAccessKey)
-	if newCredentials.SecretAccessKey == "" {
-		newCredentials.SecretAccessKey = os.Getenv(envSecretKey)
+	if newCredentials, err = profileRetrieve(); err == nil {
+		return
 	}
-
-	newCredentials.SecurityToken = os.Getenv(envSecurityToken)
 
 	// If there is no Access Key and you are on EC2, get the key from the role
 	if (newCredentials.AccessKeyID == "" || newCredentials.SecretAccessKey == "") && onEC2() {
@@ -89,7 +94,83 @@ func newKeys() (newCredentials Credentials) {
 		newCredentials = *getIAMRoleCredentials()
 	}
 
-	return newCredentials
+	return
+}
+
+// Retrieves credentials from the ENV variables
+func envRetrieve() (Credentials, error) {
+	id := os.Getenv("AWS_ACCESS_KEY_ID")
+	if id == "" {
+		id = os.Getenv("AWS_ACCESS_KEY")
+	}
+
+	secret := os.Getenv("AWS_SECRET_ACCESS_KEY")
+	if secret == "" {
+		secret = os.Getenv("AWS_SECRET_KEY")
+	}
+
+	if id == "" {
+		return Credentials{}, errors.New("No AWS_ACCESS_KEY_ID set")
+	}
+
+	if secret == "" {
+		return Credentials{}, errors.New("No AWS_SECRET_ACCESS_KEY set")
+	}
+
+	return Credentials{
+		AccessKeyID:     id,
+		SecretAccessKey: secret,
+		SecurityToken:   os.Getenv("AWS_SESSION_TOKEN"),
+	}, nil
+}
+
+// Retrieves credentials from the ~/.aws/credentials directory
+func profileRetrieve() (Credentials, error) {
+	filename := ""
+	if filename = os.Getenv("AWS_SHARED_CREDENTIALS_FILE"); filename == "" {
+		homeDir := os.Getenv("HOME") // *nix
+		if homeDir == "" {           // Windows
+			homeDir = os.Getenv("USERPROFILE")
+		}
+		if homeDir == "" {
+			return Credentials{}, errors.New("Cannot find home directory")
+		}
+
+		filename = filepath.Join(homeDir, ".aws", "credentials")
+	}
+
+	profile := os.Getenv("AWS_PROFILE")
+	if profile == "" {
+		profile = "default"
+	}
+
+	config, err := ini.Load(filename)
+	if err != nil {
+		return Credentials{}, errors.New("failed to load shared credentials file")
+	}
+	iniProfile, err := config.GetSection(profile)
+	if err != nil {
+		return Credentials{}, errors.New("failed to get profile")
+	}
+
+	id, err := iniProfile.GetKey("aws_access_key_id")
+	if err != nil {
+		return Credentials{}, errors.New(fmt.Sprintf("shared credentials %s in %s did not contain aws_access_key_id", profile, filename))
+	}
+
+	secret, err := iniProfile.GetKey("aws_secret_access_key")
+	if err != nil {
+		return Credentials{}, errors.New(fmt.Sprintf("shared credentials %s in %s did not contain aws_secret_access_key", profile, filename))
+	}
+
+	// Default to empty string if not found
+	token := iniProfile.Key("aws_session_token")
+
+	return Credentials{
+		AccessKeyID:     id.String(),
+		SecretAccessKey: secret.String(),
+		SecurityToken:   token.String(),
+	}, nil
 }
 
 // checkKeys gets credentials depending on if any were passed in as an argument

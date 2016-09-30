@@ -93,6 +93,16 @@ func TestVersion4SigningTasks(t *testing.T) {
 			So(stringToSign, ShouldEqual, expectingV4["StringToSign"])
 		})
 
+		Convey("(Task 2) The string to sign should be build correctly with custom meta", func() {
+			customMeta := new(metadata)
+			customMeta.region = "foo"
+			customMeta.service = "bar"
+			hashedCanonReq := hashedCanonicalRequestV4(request, customMeta)
+			stringToSign := stringToSignV4(request, hashedCanonReq, customMeta)
+
+			So(stringToSign, ShouldEqual, expectingV4["CustomStringToSign"])
+		})
+
 		Convey("(Task 3) The version 4 signed signature should be correct", func() {
 			hashedCanonReq := hashedCanonicalRequestV4(request, meta)
 			stringToSign := stringToSignV4(request, hashedCanonReq, meta)
@@ -204,10 +214,11 @@ var (
 	}
 
 	expectingV4 = map[string]string{
-		"CanonicalHash": "41c56ed0df12052f7c10407a809e64cd61a4b0471956cdea28d6d1bb904f5d92",
-		"StringToSign":  "AWS4-HMAC-SHA256\n20110909T233600Z\n20110909/us-east-1/iam/aws4_request\n41c56ed0df12052f7c10407a809e64cd61a4b0471956cdea28d6d1bb904f5d92",
-		"SignatureV4":   "08292a4b86aae1a6f80f1988182a33cbf73ccc70c5da505303e355a67cc64cb4",
-		"AuthHeader":    "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/iam/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=",
+		"CanonicalHash":      "41c56ed0df12052f7c10407a809e64cd61a4b0471956cdea28d6d1bb904f5d92",
+		"StringToSign":       "AWS4-HMAC-SHA256\n20110909T233600Z\n20110909/us-east-1/iam/aws4_request\n41c56ed0df12052f7c10407a809e64cd61a4b0471956cdea28d6d1bb904f5d92",
+		"CustomStringToSign": "AWS4-HMAC-SHA256\n20110909T233600Z\n20110909/foo/bar/aws4_request\n41c56ed0df12052f7c10407a809e64cd61a4b0471956cdea28d6d1bb904f5d92",
+		"SignatureV4":        "08292a4b86aae1a6f80f1988182a33cbf73ccc70c5da505303e355a67cc64cb4",
+		"AuthHeader":         "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/iam/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=",
 	}
 
 	requestValuesV4 = &url.Values{
