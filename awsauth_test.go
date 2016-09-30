@@ -181,6 +181,17 @@ func TestSign(t *testing.T) {
 		}
 	})
 
+	Convey("Requests to Custom URLs should be signed accordingly", t, func() {
+		reqs := []*http.Request{
+			newRequest("POST", "https://customurl.foobarbaz.com/", url.Values{}),
+			newRequest("GET", "https://customurl.foobarbaz.com", url.Values{}),
+		}
+		for _, request := range reqs {
+			signedReq := SignCustomApiRequest(request, "us-east-1")
+			So(signedReq.Header.Get("Authorization"), ShouldContainSubstring, ", Signature=")
+		}
+	})
+
 	var keys Credentials
 	keys = newKeys()
 	Convey("Requests to services using existing credentials Version 2 should be signed accordingly", t, func() {
@@ -213,6 +224,17 @@ func TestSign(t *testing.T) {
 		}
 		for _, request := range reqs {
 			signedReq := Sign(request, keys)
+			So(signedReq.Header.Get("Authorization"), ShouldContainSubstring, ", Signature=")
+		}
+	})
+
+	Convey("Requests to Custom URLs using existing credentials should be signed accordingly", t, func() {
+		reqs := []*http.Request{
+			newRequest("POST", "https://customurl.foobarbaz.com/", url.Values{}),
+			newRequest("GET", "https://customurl.foobarbaz.com", url.Values{}),
+		}
+		for _, request := range reqs {
+			signedReq := SignCustomApiRequest(request, "us-east-1", keys)
 			So(signedReq.Header.Get("Authorization"), ShouldContainSubstring, ", Signature=")
 		}
 	})

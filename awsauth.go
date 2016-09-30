@@ -154,6 +154,42 @@ func SignS3Url(request *http.Request, expire time.Time, credentials ...Credentia
 	return request
 }
 
+// SignCustomApiRequest signs a request to an AWS API that does not use
+// the default AWS URL format. You SHOULD specify a region, though it
+// will default to 'us-east-1'. Uses Sign4 logic.
+func SignCustomApiRequest(request *http.Request, region string, credentials ...Credentials) *http.Request {
+	keys := chooseKeys(credentials)
+
+	// Add the X-Amz-Security-Token header when using STS
+	if keys.SecurityToken != "" {
+		request.Header.Set("X-Amz-Security-Token", keys.SecurityToken)
+	}
+
+	prepareRequestV4(request)
+	meta := new(metadata)
+	meta.service = "execute-api"
+	if region != "" {
+		meta.region = region
+	} else {
+		// Default to us-east-1 if region not set
+		meta.region = "us-east-1"
+	}
+
+	// Task 1
+	hashedCanonReq := hashedCanonicalRequestV4(request, meta)
+
+	// Task 2
+	stringToSign := stringToSignV4(request, hashedCanonReq, meta)
+
+	// Task 3
+	signingKey := signingKeyV4(keys.SecretAccessKey, meta.date, meta.region, meta.service)
+	signature := signatureV4(signingKey, stringToSign)
+
+	request.Header.Set("Authorization", buildAuthHeaderV4(signature, meta, keys))
+
+	return request
+}
+
 // expired checks to see if the temporary credentials from an IAM role are
 // within 4 minutes of expiration (The IAM documentation says that new keys
 // will be provisioned 5 minutes before the old keys expire). Credentials
@@ -201,6 +237,7 @@ var (
 		"elasticmapreduce":     4,
 		"elastictranscoder":    4,
 		"elasticache":          2,
+		"execute-api":          4,
 		"es":                   4,
 		"glacier":              4,
 		"kinesis":              4,
