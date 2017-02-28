@@ -24,7 +24,10 @@ type location struct {
 	checked bool
 }
 
-var loc *location
+var (
+	loc               *location
+	cachedCredentials *Credentials
+)
 
 // serviceAndRegion parsers a hostname to find out which ones it is.
 // http://docs.aws.amazon.com/general/latest/gr/rande.html
@@ -64,32 +67,47 @@ func serviceAndRegion(host string) (service string, region string) {
 	return
 }
 
-// newKeys produces a set of credentials based on the environment
-func newKeys() (newCredentials Credentials) {
-	// First use credentials from environment variables
-	newCredentials.AccessKeyID = os.Getenv(envAccessKeyID)
-	if newCredentials.AccessKeyID == "" {
-		newCredentials.AccessKeyID = os.Getenv(envAccessKey)
+// newKeys produces a set of credentials based on the environment or
+// instance role.  It will first attempt to return credentials from
+// the environment; if that doesn't exist and the host is running in
+// EC2 it will attempt to fetch instance role based credentials.
+// Fetching role-based creds is expensive so try to cache until expired.
+func newKeys() Credentials {
+	if cachedCredentials != nil {
+		if cachedCredentials.expired() {
+			cachedCredentials = getIAMRoleCredentials()
+		}
+
+		return *cachedCredentials
 	}
 
-	newCredentials.SecretAccessKey = os.Getenv(envSecretAccessKey)
-	if newCredentials.SecretAccessKey == "" {
-		newCredentials.SecretAccessKey = os.Getenv(envSecretKey)
+	credentials := &Credentials{}
+
+	// Prefer credentials from environment variables
+	credentials.AccessKeyID = os.Getenv(envAccessKeyID)
+	if credentials.AccessKeyID == "" {
+		credentials.AccessKeyID = os.Getenv(envAccessKey)
 	}
 
-	newCredentials.SecurityToken = os.Getenv(envSecurityToken)
-
-	// If there is no Access Key and you are on EC2, get the key from the role
-	if (newCredentials.AccessKeyID == "" || newCredentials.SecretAccessKey == "") && onEC2() {
-		newCredentials = *getIAMRoleCredentials()
+	credentials.SecretAccessKey = os.Getenv(envSecretAccessKey)
+	if credentials.SecretAccessKey == "" {
+		credentials.SecretAccessKey = os.Getenv(envSecretKey)
 	}
 
-	// If the key is expiring, get a new key
-	if newCredentials.expired() && onEC2() {
-		newCredentials = *getIAMRoleCredentials()
+	credentials.SecurityToken = os.Getenv(envSecurityToken)
+
+	if !onEC2() {
+		return *credentials
 	}
 
-	return newCredentials
+	// If environment creds are missing/expired, check the instance role metadata
+	if credentials.AccessKeyID == "" || credentials.SecretAccessKey == "" || credentials.expired() {
+		// Fetching IAM credentials is expensive, cache the result
+		cachedCredentials = getIAMRoleCredentials()
+		return *cachedCredentials
+	}
+
+	return *credentials
 }
 
 // checkKeys gets credentials depending on if any were passed in as an argument
