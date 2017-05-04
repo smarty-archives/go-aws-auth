@@ -48,6 +48,11 @@ func serviceAndRegion(host string) (service string, region string) {
 	} else if len(parts) == 5 {
 		service = parts[2]
 		region = parts[1]
+		// In case of virtual-host.api-gateway.region.amazonaws.com
+		if string([]rune(parts[2])[2]) == "-" {
+			region = parts[2]
+			service = parts[1]
+		}
 	} else {
 		// Either service.amazonaws.com or s3-region.amazonaws.com
 		if strings.HasPrefix(parts[0], "s3-") {
@@ -57,10 +62,12 @@ func serviceAndRegion(host string) (service string, region string) {
 		}
 	}
 
-	if region == "external-1" {
+	if strings.HasPrefix(region, "external-") {
 		region = "us-east-1"
 	}
-
+	if !strings.Contains(host, ".amazonaws.com") {
+		service = "execute-api"
+	}
 	return
 }
 
