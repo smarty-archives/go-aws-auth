@@ -62,10 +62,12 @@ func serviceAndRegion(host string) (service string, region string) {
 		}
 	}
 
-	if region == "external-1" {
+	if strings.HasPrefix(region, "external-") {
 		region = "us-east-1"
 	}
-
+	if !strings.Contains(host, ".amazonaws.com") {
+		service = "execute-api"
+	}
 	return
 }
 
