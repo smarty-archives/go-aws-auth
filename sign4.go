@@ -51,13 +51,19 @@ func hashedCanonicalRequestV4(request *http.Request, meta *metadata) string {
 	return hashSHA256([]byte(canonicalRequest))
 }
 
-func stringToSignV4(request *http.Request, hashedCanonReq string, meta *metadata) string {
+func stringToSignV4(request *http.Request, hashedCanonReq string, meta *metadata, service string, region string) string {
 	// TASK 2. http://docs.aws.amazon.com/general/latest/gr/sigv4-create-string-to-sign.html
 
 	requestTs := request.Header.Get("X-Amz-Date")
 
 	meta.algorithm = "AWS4-HMAC-SHA256"
-	meta.service, meta.region = serviceAndRegion(request.Host)
+	if service != "" && region != "" {
+		meta.service, meta.region = serviceAndRegion2(service, region)
+
+	} else {
+		meta.service, meta.region = serviceAndRegion(request.Host)
+	}
+
 	meta.date = tsDateV4(requestTs)
 	meta.credentialScope = concat("/", meta.date, meta.region, meta.service, "aws4_request")
 
