@@ -73,7 +73,7 @@ func TestVersion4SigningTasks(t *testing.T) {
 
 	// Given a bogus request and credentials from AWS documentation with an additional meta tag
 	request := test_unsignedRequestV4(true, true)
-	meta := new(metadata)
+	meta := new(Metadata)
 	assert := assertions.New(t)
 
 	// (Task 1) The canonical request should be built correctly
@@ -98,10 +98,10 @@ func TestSignature4Helpers(t *testing.T) {
 }
 func TestSignature4Helpers_1(t *testing.T) {
 	// Authorization headers should be built properly
-	meta := &metadata{
-		algorithm:       "AWS4-HMAC-SHA256",
-		credentialScope: "20110909/us-east-1/iam/aws4_request",
-		signedHeaders:   "content-type;host;x-amz-date",
+	meta := &Metadata{
+		Algorithm:       "AWS4-HMAC-SHA256",
+		CredentialScope: "20110909/us-east-1/iam/aws4_request",
+		SignedHeaders:   "content-type;host;x-amz-date",
 	}
 	expected := expectingV4["AuthHeader"] + expectingV4["SignatureV4"]
 	actual := buildAuthHeaderV4(expectingV4["SignatureV4"], meta, *testCredV4)
