@@ -18,7 +18,7 @@ func hashedCanonicalRequestV4(request *http.Request, meta *metadata) string {
 	request.Header.Set("Host", request.Host)
 
 	var sortedHeaderKeys []string
-	for key, _ := range request.Header {
+	for key := range request.Header {
 		switch key {
 		case "Content-Type", "Content-Md5", "Host":
 		default:
@@ -57,7 +57,17 @@ func stringToSignV4(request *http.Request, hashedCanonReq string, meta *metadata
 	requestTs := request.Header.Get("X-Amz-Date")
 
 	meta.algorithm = "AWS4-HMAC-SHA256"
-	meta.service, meta.region = serviceAndRegion(request.Host)
+
+	if meta.service == "" || meta.region == "" {
+		service, region := serviceAndRegion(request.Host)
+		if meta.service == "" {
+			meta.service = service
+		}
+		if meta.region == "" {
+			meta.region = region
+		}
+	}
+
 	meta.date = tsDateV4(requestTs)
 	meta.credentialScope = concat("/", meta.date, meta.region, meta.service, "aws4_request")
 
