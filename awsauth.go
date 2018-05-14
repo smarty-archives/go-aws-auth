@@ -192,7 +192,7 @@ const (
 var (
 	awsSignVersion = map[string]int{
 		"autoscaling":          4,
-    "ce"                    4,
+		"ce":                   4,
 		"cloudfront":           4,
 		"cloudformation":       4,
 		"cloudsearch":          4,
