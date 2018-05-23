@@ -57,7 +57,13 @@ func stringToSignV4(request *http.Request, hashedCanonReq string, meta *metadata
 	requestTs := request.Header.Get("X-Amz-Date")
 
 	meta.algorithm = "AWS4-HMAC-SHA256"
-	meta.service, meta.region = serviceAndRegion(request.Host)
+	service, region := serviceAndRegion(request.Host)
+	if meta.service == "" {
+		meta.service = service
+	}
+	if meta.region == "" {
+		meta.region = region
+	}
 	meta.date = tsDateV4(requestTs)
 	meta.credentialScope = concat("/", meta.date, meta.region, meta.service, "aws4_request")
 
