@@ -78,6 +78,9 @@ func newKeys() (newCredentials Credentials) {
 	}
 
 	newCredentials.SecurityToken = os.Getenv(envSecurityToken)
+	if newCredentials.SecurityToken == "" {
+		newCredentials.SecurityToken = os.Getenv(envSessionToken)
+	}
 
 	// If there is no Access Key and you are on EC2, get the key from the role
 	if (newCredentials.AccessKeyID == "" || newCredentials.SecretAccessKey == "") && onEC2() {

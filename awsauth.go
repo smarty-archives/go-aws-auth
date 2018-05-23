@@ -187,6 +187,7 @@ const (
 	envSecretKey       = "AWS_SECRET_KEY"
 	envSecretAccessKey = "AWS_SECRET_ACCESS_KEY"
 	envSecurityToken   = "AWS_SECURITY_TOKEN"
+	envSessionToken    = "AWS_SESSION_TOKEN"
 )
 
 var (
