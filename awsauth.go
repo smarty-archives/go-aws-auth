@@ -39,6 +39,10 @@ func Sign(request *http.Request, credentials ...Credentials) *http.Request {
 
 // Sign4 signs a request with Signed Signature Version 4.
 func Sign4(request *http.Request, credentials ...Credentials) *http.Request {
+	return Sign4WithMeta(request, new(Metadata), credentials...)
+}
+
+func Sign4WithMeta(request *http.Request, meta *Metadata, credentials ...Credentials) *http.Request {
 	keys := chooseKeys(credentials)
 
 	// Add the X-Amz-Security-Token header when using STS
@@ -47,7 +51,6 @@ func Sign4(request *http.Request, credentials ...Credentials) *http.Request {
 	}
 
 	prepareRequestV4(request)
-	meta := new(metadata)
 
 	// Task 1
 	hashedCanonReq := hashedCanonicalRequestV4(request, meta)
@@ -56,7 +59,7 @@ func Sign4(request *http.Request, credentials ...Credentials) *http.Request {
 	stringToSign := stringToSignV4(request, hashedCanonReq, meta)
 
 	// Task 3
-	signingKey := signingKeyV4(keys.SecretAccessKey, meta.date, meta.region, meta.service)
+	signingKey := signingKeyV4(keys.SecretAccessKey, meta.Date, meta.Region, meta.Service)
 	signature := signatureV4(signingKey, stringToSign)
 
 	request.Header.Set("Authorization", buildAuthHeaderV4(signature, meta, keys))
@@ -172,14 +175,51 @@ func (this *Credentials) expired() bool {
 	}
 }
 
-type metadata struct {
-	algorithm       string
-	credentialScope string
-	signedHeaders   string
-	date            string
-	region          string
-	service         string
+type Metadata struct {
+	Algorithm       string
+	CredentialScope string
+	SignedHeaders   string
+	Date            string
+	Region          string
+	Service         string
 }
+
+func (m *Metadata) SetAlgorithm(value string){
+	if(m.Algorithm == ""){
+		m.Algorithm = value
+	}
+}
+
+func (m *Metadata) SetCredentialScope(value string){
+	if(m.CredentialScope == ""){
+		m.CredentialScope = value
+	}
+}
+
+func (m *Metadata) SetSignedHeaders(value string){
+	if(m.SignedHeaders == ""){
+		m.SignedHeaders = value
+	}
+}
+
+func (m *Metadata) SetDate(value string){
+	if(m.Date == ""){
+		m.Date = value
+	}
+}
+
+func (m *Metadata) SetRegion(value string){
+	if(m.Region == ""){
+		m.Region = value
+	}
+}
+
+func (m *Metadata) SetService(value string){
+	if(m.Service == ""){
+		m.Service = value
+	}
+}
+
 
 const (
 	envAccessKey       = "AWS_ACCESS_KEY"
