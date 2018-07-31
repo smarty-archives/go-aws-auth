@@ -19,11 +19,6 @@ func stringToSignS3(request *http.Request) string {
 
 	if request.Header.Get("Content-Md5") != "" {
 		str += request.Header.Get("Content-Md5")
-	} else {
-		body := readAndReplaceBody(request)
-		if len(body) > 0 {
-			str += hashMD5(body)
-		}
 	}
 	str += "\n"
 
@@ -86,7 +81,17 @@ func canonicalResourceS3(request *http.Request) string {
 		res += "/" + bucketname
 	}
 
-	res += request.URL.Path
+	uri := request.URL.Opaque
+	if uri != "" {
+		uri = "/" + strings.Join(strings.Split(uri, "/")[3:], "/")
+	} else {
+		uri = request.URL.Path
+	}
+	if uri == "" {
+		uri = "/"
+	}
+
+	res += uri
 
 	for _, subres := range strings.Split(subresourcesS3, ",") {
 		if strings.HasPrefix(request.URL.RawQuery, subres) {
